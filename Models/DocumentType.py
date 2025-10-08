@@ -1,4 +1,4 @@
-from models.database import db
+from Models.Database import db
 
 class DocumentType(db.Model):
     __tablename__ = "DocumentTypes"

@@ -10,7 +10,7 @@ def create_app():
     app = Flask(__name__)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = (
-        "mssql+pyodbc://localhost/JinseiDB?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
+        "mssql+pyodbc://localhost/Jinsei?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

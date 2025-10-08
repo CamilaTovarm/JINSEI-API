@@ -1,4 +1,4 @@
-from models.database import db
+from Models.Database import db
 from datetime import datetime
 
 class Consent(db.Model):
