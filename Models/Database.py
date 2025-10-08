@@ -3,12 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 def init_db():
-    from models.user import User
-    from models.session import Session
-    from models.document_type import DocumentType
-    from models.consent import Consent
-    from models.contact_type import ContactType
-    from models.contact import Contact
-    from models.risk_level import RiskLevel
-    from models.message import Message
+    from Models.User import User
+    from Models.Session import Session
+    from Models.DocumentType import DocumentType
+    from Models.Consent import Consent
+    from Models.ContactType import ContactType
+    from Models.Contact import Contact
+    from Models.RiskLevel import RiskLevel
+    from Models.Message import Message
     db.create_all()

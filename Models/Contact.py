@@ -1,4 +1,5 @@
-from models.database import db
+from Models.Database import db
+from datetime import datetime
 
 class Contact(db.Model):
     __tablename__ = "Contacts"
