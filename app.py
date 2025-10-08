@@ -1,25 +1,30 @@
-from flask import Flask
+from flask import Flask, jsonify
+from flask_cors import CORS
 from flasgger import Swagger
-from Models.Database import db, init_db
+from flask_migrate import Migrate
+from ConfigDB import init_db, db
 
-from Controllers.UserController import user_bp
-from Controllers.ChatController import chat_bp
-from Controllers.ConsentController import consent_bp
+# ... (importa tus blueprints como antes)
 
-app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///chatbot.db"  # Cambiar luego por SQL Server
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+def create_app():
+    app = Flask(__name__)
 
-swagger = Swagger(app)
-db.init_app(app)
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        "mssql+pyodbc://localhost/JinseiDB?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
+    )
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Registrar controladores
-app.register_blueprint(user_bp, url_prefix="/users")
-app.register_blueprint(chat_bp, url_prefix="/chat")
-app.register_blueprint(consent_bp, url_prefix="/consent")
+    CORS(app)
+    init_db(app)
+    migrate = Migrate(app, db)  # <<<<< NUEVA LÍNEA
 
-with app.app_context():
-    init_db()
+    Swagger(app)
+    
+    # ... tus blueprints y rutas ...
+
+    return app
+
 
 if __name__ == "__main__":
+    app = create_app()
     app.run(debug=True)

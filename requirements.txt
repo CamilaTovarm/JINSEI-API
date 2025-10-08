@@ -1,5 +1,6 @@
-flask
-flasgger
-torch
-transformers
-huggingface_hub
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Cors
+Flasgger
+pyodbc
