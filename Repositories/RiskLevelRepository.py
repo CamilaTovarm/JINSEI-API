@@ -1,33 +1,37 @@
+# repositories/risklevel_repository.py
+from ConfigDB import db
 from Models.RiskLevel import RiskLevel
-from Models.Database import db
+from sqlalchemy.exc import SQLAlchemyError
 
 class RiskLevelRepository:
+    def __init__(self):
+        self.db = db
 
     def get_all(self):
-        return RiskLevel.query.all()
+        return RiskLevel.query.filter_by(IsDeleted=False).all()
 
-    def get_by_id(self, id):
-        return RiskLevel.query.get(id)
+    def get_by_id(self, risk_level_id):
+        return RiskLevel.query.filter_by(RiskLevelId=risk_level_id, IsDeleted=False).first()
 
-    def create(self, name, description):
-        rl = RiskLevel(name=name, description=description)
-        db.session.add(rl)
-        db.session.commit()
-        return rl
+    def create(self, description):
+        try:
+            new_level = RiskLevel(Description=description, IsDeleted=False)
+            self.db.session.add(new_level)
+            self.db.session.commit()
+            return new_level
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise
 
-    def update(self, id, name=None, description=None):
-        rl = self.get_by_id(id)
-        if not rl:
+    def update(self, risk_level):
+        existing = RiskLevel.query.get(risk_level.RiskLevelId)
+        if not existing or existing.IsDeleted:
             return None
-        if name: rl.name = name
-        if description: rl.description = description
-        db.session.commit()
-        return rl
+        existing.Description = risk_level.Description
+        self.db.session.commit()
+        return existing
 
-    def delete(self, id):
-        rl = self.get_by_id(id)
-        if not rl:
-            return False
-        db.session.delete(rl)
-        db.session.commit()
-        return True
+    def delete(self, risk_level):
+        risk_level.IsDeleted = True
+        self.db.session.commit()
+        return risk_level

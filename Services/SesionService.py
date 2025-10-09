@@ -1,30 +1,32 @@
 from Repositories.SessionRepository import SessionRepository
 
 class SessionService:
-
     def __init__(self):
-        self.repo = SessionRepository()
+        self.session_repo = SessionRepository()
 
-    def get_all(self):
-        return self.repo.get_all()
+    def get_all_sessions(self):
+        return self.session_repo.get_all()
 
-    def get_by_id(self, session_id):
-        session = self.repo.get_by_id(session_id)
+    def get_session_by_id(self, session_id):
+        session = self.session_repo.get_by_id(session_id)
         if not session:
-            raise Exception("Sesión no encontrada.")
+            raise Exception(f"La sesión con ID {session_id} no existe.")
         return session
 
-    def create(self, user_id):
-        return self.repo.create(user_id)
+    def create_session(self, user_id, start_time, end_time=None):
+        return self.session_repo.create(user_id, start_time, end_time)
 
-    def update(self, session_id, **kwargs):
-        updated = self.repo.update(session_id, **kwargs)
-        if not updated:
-            raise Exception("Sesión no encontrada para actualizar.")
-        return updated
+    def update_session(self, session_id, end_time=None):
+        session = self.session_repo.get_by_id(session_id)
+        if not session:
+            raise Exception(f"La sesión con ID {session_id} no existe.")
+        if end_time:
+            session.end_time = end_time
+        return self.session_repo.update(session)
 
-    def delete(self, session_id):
-        deleted = self.repo.delete(session_id)
-        if not deleted:
-            raise Exception("Sesión no encontrada para eliminar.")
-        return True
+    def delete_session(self, session_id):
+        session = self.session_repo.get_by_id(session_id)
+        if not session:
+            raise Exception(f"La sesión con ID {session_id} no existe.")
+        session.is_deleted = True
+        return self.session_repo.update(session)

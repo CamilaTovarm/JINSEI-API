@@ -1,40 +1,50 @@
+# repositories/message_repository.py
+from ConfigDB import db
 from Models.Message import Message
-from Models.Database import db
+from sqlalchemy.exc import SQLAlchemyError
 
 class MessageRepository:
+    def __init__(self):
+        self.db = db
 
     def get_all(self):
-        return Message.query.all()
+        return Message.query.filter_by(IsDeleted=False).all()
 
     def get_by_id(self, message_id):
-        return Message.query.get(message_id)
+        return Message.query.filter_by(MessageId=message_id, IsDeleted=False).first()
 
-    def create(self, session_id, bot_message, user_response, risk_level_id=None, risk_label=None, risk_score=None):
-        message = Message(
-            session_id=session_id,
-            bot_message=bot_message,
-            user_response=user_response,
-            risk_level_id=risk_level_id,
-            risk_label=risk_label,
-            risk_score=risk_score
-        )
-        db.session.add(message)
-        db.session.commit()
-        return message
+    def create(self, session_id, bot_message, user_response=None, risk_level_id=None, risk_percent=None):
+        try:
+            new_message = Message(
+                SessionId=session_id,
+                BotMessage=bot_message,
+                UserResponse=user_response,
+                RiskLevelId=risk_level_id,
+                RiskPercent=risk_percent,
+                IsDeleted=False
+            )
+            self.db.session.add(new_message)
+            self.db.session.commit()
+            return new_message
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise
 
-    def update(self, message_id, **kwargs):
-        message = self.get_by_id(message_id)
-        if not message:
+    def update(self, message):
+        """
+        message: instancia models.message.Message (con MessageId)
+        """
+        existing = Message.query.get(message.MessageId)
+        if not existing or existing.IsDeleted:
             return None
-        for key, value in kwargs.items():
-            setattr(message, key, value)
-        db.session.commit()
-        return message
+        existing.BotMessage = message.BotMessage
+        existing.UserResponse = message.UserResponse
+        existing.RiskLevelId = message.RiskLevelId
+        existing.RiskPercent = message.RiskPercent
+        self.db.session.commit()
+        return existing
 
-    def delete(self, message_id):
-        message = self.get_by_id(message_id)
-        if not message:
-            return False
-        db.session.delete(message)
-        db.session.commit()
-        return True
+    def delete(self, message):
+        message.IsDeleted = True
+        self.db.session.commit()
+        return message

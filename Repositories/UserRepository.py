@@ -1,40 +1,45 @@
+# repositories/user_repository.py
+from ConfigDB import db
 from Models.User import User
-from Models.Database import db
-from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.exc import SQLAlchemyError
 
 class UserRepository:
+    def __init__(self):
+        self.db = db
 
     def get_all(self):
-        return User.query.all()
+        return User.query.filter_by(IsDeleted=False).all()
 
-    def get_by_id(self, user_id: int):
-        return User.query.get(user_id)
+    def get_by_id(self, user_id):
+        return User.query.filter_by(UserId=user_id, IsDeleted=False).first()
 
-    def get_by_alias(self, alias: str):
-        return User.query.filter_by(alias=alias).first()
+    def create(self, aka, password):
+        try:
+            new_user = User(AKA=aka, Password=password, IsDeleted=False)
+            self.db.session.add(new_user)
+            self.db.session.commit()
+            return new_user
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise
 
-    def create(self, alias: str, password: str):
-        hashed = generate_password_hash(password)
-        user = User(alias=alias, password_hash=hashed)
-        db.session.add(user)
-        db.session.commit()
-        return user
-
-    def update(self, user_id: int, alias=None, password=None):
-        user = self.get_by_id(user_id)
-        if not user:
+    def update(self, user):
+        """
+        user: instancia de models.user.User (con UserId definido)
+        """
+        existing = User.query.get(user.UserId)
+        if not existing or existing.IsDeleted:
             return None
-        if alias:
-            user.alias = alias
-        if password:
-            user.password_hash = generate_password_hash(password)
-        db.session.commit()
-        return user
+        existing.AKA = user.AKA
+        existing.Password = user.Password
+        self.db.session.commit()
+        return existing
 
-    def delete(self, user_id: int):
-        user = self.get_by_id(user_id)
-        if not user:
-            return False
-        db.session.delete(user)
-        db.session.commit()
-        return True
+    def delete(self, user):
+        """
+        user: instancia de models.user.User (puede ser la misma instancia recuperada)
+        soft-delete -> marca IsDeleted = True
+        """
+        user.IsDeleted = True
+        self.db.session.commit()
+        return user

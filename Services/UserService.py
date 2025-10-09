@@ -1,32 +1,40 @@
 from Repositories.UserRepository import UserRepository
 
 class UserService:
-
     def __init__(self):
-        self.repo = UserRepository()
+        self.user_repo = UserRepository()
 
-    def get_all(self):
-        return self.repo.get_all()
+    def get_all_users(self):
+        return self.user_repo.get_all()
 
-    def get_by_id(self, user_id):
-        user = self.repo.get_by_id(user_id)
+    def get_user_by_id(self, user_id):
+        user = self.user_repo.get_by_id(user_id)
         if not user:
-            raise Exception("Usuario no encontrado.")
+            raise Exception(f"El usuario con ID {user_id} no existe.")
         return user
 
-    def create(self, alias, password):
-        if self.repo.get_by_alias(alias):
-            raise Exception("El alias ya está en uso.")
-        return self.repo.create(alias, password)
+    def create_user(self, alias, password_hash):
+        existing_user = self.user_repo.get_by_alias(alias)
+        if existing_user:
+            raise Exception(f"El alias '{alias}' ya está registrado.")
+        return self.user_repo.create(alias, password_hash)
 
-    def update(self, user_id, alias=None, password=None):
-        updated = self.repo.update(user_id, alias, password)
-        if not updated:
-            raise Exception("Usuario no encontrado para actualizar.")
-        return updated
+    def update_user(self, user_id, alias=None, password_hash=None):
+        user = self.user_repo.get_by_id(user_id)
+        if not user:
+            raise Exception(f"El usuario con ID {user_id} no existe.")
 
-    def delete(self, user_id):
-        deleted = self.repo.delete(user_id)
-        if not deleted:
-            raise Exception("Usuario no encontrado para eliminar.")
-        return True
+        if alias:
+            user.alias = alias
+        if password_hash:
+            user.password_hash = password_hash
+
+        return self.user_repo.update(user)
+
+    def delete_user(self, user_id):
+        user = self.user_repo.get_by_id(user_id)
+        if not user:
+            raise Exception(f"El usuario con ID {user_id} no existe.")
+        
+        user.is_deleted = True
+        return self.user_repo.update(user)

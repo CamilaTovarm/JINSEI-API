@@ -1,33 +1,37 @@
+# repositories/documenttype_repository.py
+from ConfigDB import db
 from Models.DocumentType import DocumentType
-from Models.Database import db
+from sqlalchemy.exc import SQLAlchemyError
 
 class DocumentTypeRepository:
+    def __init__(self):
+        self.db = db
 
     def get_all(self):
-        return DocumentType.query.all()
+        return DocumentType.query.filter_by(IsDeleted=False).all()
 
-    def get_by_id(self, id):
-        return DocumentType.query.get(id)
+    def get_by_id(self, document_type_id):
+        return DocumentType.query.filter_by(DocumentTypeId=document_type_id, IsDeleted=False).first()
 
-    def create(self, code, description):
-        doc_type = DocumentType(code=code, description=description)
-        db.session.add(doc_type)
-        db.session.commit()
-        return doc_type
+    def create(self, description):
+        try:
+            new_doc = DocumentType(Description=description, IsDeleted=False)
+            self.db.session.add(new_doc)
+            self.db.session.commit()
+            return new_doc
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise
 
-    def update(self, id, code=None, description=None):
-        doc_type = self.get_by_id(id)
-        if not doc_type:
+    def update(self, document_type):
+        existing = DocumentType.query.get(document_type.DocumentTypeId)
+        if not existing or existing.IsDeleted:
             return None
-        if code: doc_type.code = code
-        if description: doc_type.description = description
-        db.session.commit()
-        return doc_type
+        existing.Description = document_type.Description
+        self.db.session.commit()
+        return existing
 
-    def delete(self, id):
-        doc_type = self.get_by_id(id)
-        if not doc_type:
-            return False
-        db.session.delete(doc_type)
-        db.session.commit()
-        return True
+    def delete(self, document_type):
+        document_type.IsDeleted = True
+        self.db.session.commit()
+        return document_type

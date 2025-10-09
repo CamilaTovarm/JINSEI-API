@@ -2,26 +2,46 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from flasgger import Swagger
 from flask_migrate import Migrate
-from ConfigDB import init_db, db
-
-# ... (importa tus blueprints como antes)
+from ConfigDB import init_db, db, ensure_database_exists
+import urllib
+import Models
 
 def create_app():
     app = Flask(__name__)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = (
-        "mssql+pyodbc://localhost/Jinsei?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
+    SERVER_NAME = "HPPAVILION"   # 👈 nombre de tu servidor local
+    DATABASE_NAME = "JINSEI"     # 👈 nombre de la base de datos
+
+    ensure_database_exists(SERVER_NAME, DATABASE_NAME)
+                           
+    connection_string = (
+        "DRIVER={ODBC Driver 17 for SQL Server};"
+        f"SERVER={SERVER_NAME};"
+        f"DATABASE={DATABASE_NAME};"
+        "Trusted_Connection=yes;"
+        "Encrypt=yes;"
+        "TrustServerCertificate=yes;"
+        "Application Name=FlaskApp;"
     )
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    params = urllib.parse.quote_plus(connection_string)
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"mssql+pyodbc:///?odbc_connect={params}"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     CORS(app)
     init_db(app)
-    migrate = Migrate(app, db)  # <<<<< NUEVA LÍNEA
-
+    Migrate(app, db)
     Swagger(app)
-    
-    # ... tus blueprints y rutas ...
 
+    @app.route("/")
+    def index():
+        return jsonify({
+            "message": "✅ API Jinsei conectada correctamente a SQL Server",
+            "docs": "/apidocs/"
+        })
+
+    with app.app_context():
+        db.create_all()
     return app
 
 
