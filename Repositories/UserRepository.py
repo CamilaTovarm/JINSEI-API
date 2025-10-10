@@ -24,9 +24,6 @@ class UserRepository:
             raise
 
     def update(self, user):
-        """
-        user: instancia de models.user.User (con UserId definido)
-        """
         existing = User.query.get(user.UserId)
         if not existing or existing.IsDeleted:
             return None
@@ -36,10 +33,10 @@ class UserRepository:
         return existing
 
     def delete(self, user):
-        """
-        user: instancia de models.user.User (puede ser la misma instancia recuperada)
-        soft-delete -> marca IsDeleted = True
-        """
-        user.IsDeleted = True
-        self.db.session.commit()
-        return user
+        try:
+            self.db.session.add(user)  # Attach
+            self.db.session.commit()   # SaveChanges
+            return user
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise

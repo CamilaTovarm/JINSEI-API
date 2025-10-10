@@ -1,4 +1,3 @@
-# repositories/contacttype_repository.py
 from ConfigDB import db
 from Models.ContactType import ContactType
 from sqlalchemy.exc import SQLAlchemyError
@@ -15,10 +14,10 @@ class ContactTypeRepository:
 
     def create(self, description):
         try:
-            new_type = ContactType(Description=description, IsDeleted=False)
-            self.db.session.add(new_type)
+            new_contact_type = ContactType(Description=description, IsDeleted=False)
+            self.db.session.add(new_contact_type)
             self.db.session.commit()
-            return new_type
+            return new_contact_type
         except SQLAlchemyError:
             self.db.session.rollback()
             raise
@@ -32,6 +31,10 @@ class ContactTypeRepository:
         return existing
 
     def delete(self, contact_type):
-        contact_type.IsDeleted = True
-        self.db.session.commit()
-        return contact_type
+        try:
+            self.db.session.add(contact_type)
+            self.db.session.commit()
+            return contact_type
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise

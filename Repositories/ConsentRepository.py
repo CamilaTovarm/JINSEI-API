@@ -1,4 +1,3 @@
-# repositories/consent_repository.py
 from ConfigDB import db
 from Models.Consent import Consent
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,7 +12,7 @@ class ConsentRepository:
     def get_by_id(self, consent_id):
         return Consent.query.filter_by(ConsentId=consent_id, IsDeleted=False).first()
 
-    def create(self, session_id, full_name, document_type_id, document_number, contact_id=None):
+    def create(self, session_id, full_name, document_type_id, document_number, contact_id):
         try:
             new_consent = Consent(
                 SessionId=session_id,
@@ -34,6 +33,7 @@ class ConsentRepository:
         existing = Consent.query.get(consent.ConsentId)
         if not existing or existing.IsDeleted:
             return None
+        existing.SessionId = consent.SessionId
         existing.FullName = consent.FullName
         existing.DocumentTypeId = consent.DocumentTypeId
         existing.DocumentNumber = consent.DocumentNumber
@@ -42,6 +42,10 @@ class ConsentRepository:
         return existing
 
     def delete(self, consent):
-        consent.IsDeleted = True
-        self.db.session.commit()
-        return consent
+        try:
+            self.db.session.add(consent)
+            self.db.session.commit()
+            return consent
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise

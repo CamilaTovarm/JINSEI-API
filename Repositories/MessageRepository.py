@@ -1,4 +1,3 @@
-# repositories/message_repository.py
 from ConfigDB import db
 from Models.Message import Message
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,7 +12,7 @@ class MessageRepository:
     def get_by_id(self, message_id):
         return Message.query.filter_by(MessageId=message_id, IsDeleted=False).first()
 
-    def create(self, session_id, bot_message, user_response=None, risk_level_id=None, risk_percent=None):
+    def create(self, session_id, bot_message, user_response, risk_level_id=None, risk_percent=None):
         try:
             new_message = Message(
                 SessionId=session_id,
@@ -31,20 +30,24 @@ class MessageRepository:
             raise
 
     def update(self, message):
-        """
-        message: instancia models.message.Message (con MessageId)
-        """
         existing = Message.query.get(message.MessageId)
         if not existing or existing.IsDeleted:
             return None
+
+        existing.SessionId = message.SessionId
         existing.BotMessage = message.BotMessage
         existing.UserResponse = message.UserResponse
         existing.RiskLevelId = message.RiskLevelId
         existing.RiskPercent = message.RiskPercent
+
         self.db.session.commit()
         return existing
 
     def delete(self, message):
-        message.IsDeleted = True
-        self.db.session.commit()
-        return message
+        try:
+            self.db.session.add(message)
+            self.db.session.commit()
+            return message
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise

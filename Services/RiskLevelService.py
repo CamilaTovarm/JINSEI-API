@@ -1,30 +1,29 @@
 from Repositories.RiskLevelRepository import RiskLevelRepository
 
 class RiskLevelService:
-
     def __init__(self):
-        self.repo = RiskLevelRepository()
+        self._risk_repository = RiskLevelRepository()
 
-    def get_all(self):
-        return self.repo.get_all()
+    def get_all_risklevels(self):
+        return self._risk_repository.get_all()
 
-    def get_by_id(self, risk_id):
-        rl = self.repo.get_by_id(risk_id)
-        if not rl:
-            raise Exception("Nivel de riesgo no encontrado.")
-        return rl
+    def get_risklevel_by_id(self, risk_level_id):
+        return self._risk_repository.get_by_id(risk_level_id)
 
-    def create(self, name, description):
-        return self.repo.create(name, description)
+    def create_risklevel(self, description):
+        return self._risk_repository.create(description)
 
-    def update(self, risk_id, name=None, description=None):
-        updated = self.repo.update(risk_id, name, description)
-        if not updated:
-            raise Exception("Nivel de riesgo no encontrado.")
-        return updated
+    def update_risklevel(self, risk_level_id, description=None):
+        risk = self._risk_repository.get_by_id(risk_level_id)
+        if not risk:
+            raise Exception(f"The risk level with ID {risk_level_id} doesn't exist.")
+        if description is not None:
+            risk.Description = description
+        return self._risk_repository.update(risk)
 
-    def delete(self, risk_id):
-        deleted = self.repo.delete(risk_id)
-        if not deleted:
-            raise Exception("Nivel de riesgo no encontrado.")
-        return True
+    def delete_risklevel(self, risk_level_id):
+        risk_to_delete = self._risk_repository.get_by_id(risk_level_id)
+        if not risk_to_delete:
+            raise Exception(f"The risk level with ID {risk_level_id} doesn't exist.")
+        risk_to_delete.IsDeleted = True
+        return self._risk_repository.delete(risk_to_delete)

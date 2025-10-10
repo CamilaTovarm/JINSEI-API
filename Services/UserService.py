@@ -1,40 +1,37 @@
 from Repositories.UserRepository import UserRepository
+from Models.User import User
+from datetime import datetime
 
-class UserService:
+class UserService():
     def __init__(self):
-        self.user_repo = UserRepository()
+        self._user_repository = UserRepository()
 
     def get_all_users(self):
-        return self.user_repo.get_all()
+        return self._user_repository.get_all()
 
     def get_user_by_id(self, user_id):
-        user = self.user_repo.get_by_id(user_id)
+        return self._user_repository.get_by_id(user_id)
+
+    def create_user(self, aka, password):
+        return self._user_repository.create(aka, password)
+
+    def update_user(self, user_id, aka=None, password=None):
+        user = self._user_repository.get_by_id(user_id)
         if not user:
-            raise Exception(f"El usuario con ID {user_id} no existe.")
-        return user
+            raise Exception(f"The user with ID {user_id} doesn't exist.")
 
-    def create_user(self, alias, password_hash):
-        existing_user = self.user_repo.get_by_alias(alias)
-        if existing_user:
-            raise Exception(f"El alias '{alias}' ya está registrado.")
-        return self.user_repo.create(alias, password_hash)
+        if aka is not None:
+            user.AKA = aka
+        if password is not None:
+            user.Password = password
 
-    def update_user(self, user_id, alias=None, password_hash=None):
-        user = self.user_repo.get_by_id(user_id)
-        if not user:
-            raise Exception(f"El usuario con ID {user_id} no existe.")
-
-        if alias:
-            user.alias = alias
-        if password_hash:
-            user.password_hash = password_hash
-
-        return self.user_repo.update(user)
+        return self._user_repository.update(user)
 
     def delete_user(self, user_id):
-        user = self.user_repo.get_by_id(user_id)
-        if not user:
-            raise Exception(f"El usuario con ID {user_id} no existe.")
-        
-        user.is_deleted = True
-        return self.user_repo.update(user)
+        user_to_delete = self._user_repository.get_by_id(user_id)
+        if not user_to_delete:
+            raise Exception(f"The user with ID {user_id} doesn't exist.")
+
+        user_to_delete.IsDeleted = True
+
+        return self._user_repository.delete(user_to_delete)

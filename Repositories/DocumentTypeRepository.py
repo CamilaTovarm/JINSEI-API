@@ -1,4 +1,3 @@
-# repositories/documenttype_repository.py
 from ConfigDB import db
 from Models.DocumentType import DocumentType
 from sqlalchemy.exc import SQLAlchemyError
@@ -15,10 +14,10 @@ class DocumentTypeRepository:
 
     def create(self, description):
         try:
-            new_doc = DocumentType(Description=description, IsDeleted=False)
-            self.db.session.add(new_doc)
+            new_document_type = DocumentType(Description=description, IsDeleted=False)
+            self.db.session.add(new_document_type)
             self.db.session.commit()
-            return new_doc
+            return new_document_type
         except SQLAlchemyError:
             self.db.session.rollback()
             raise
@@ -32,6 +31,10 @@ class DocumentTypeRepository:
         return existing
 
     def delete(self, document_type):
-        document_type.IsDeleted = True
-        self.db.session.commit()
-        return document_type
+        try:
+            self.db.session.add(document_type)
+            self.db.session.commit()
+            return document_type
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise

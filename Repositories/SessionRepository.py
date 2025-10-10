@@ -30,21 +30,25 @@ class SessionRepository:
             self.db.session.rollback()
             raise
 
-    def update(self, session):
-        """
-        session: instancia models.session.Session (con SessionId)
-        """
-        existing = ChatSession.query.get(session.SessionId)
+    def update(self, chatSession):
+        existing = ChatSession.query.get(chatSession.SessionId)
         if not existing or existing.IsDeleted:
             return None
-        # Actualiza campos relevantes
-        existing.EndTime = session.EndTime
-        existing.RiskLevelId = session.RiskLevelId
-        existing.FinalRiskLevel = session.FinalRiskLevel
+
+        existing.UserId = chatSession.UserId
+        existing.StartTime = chatSession.StartTime
+        existing.EndTime = chatSession.EndTime
+        existing.RiskLevelId = chatSession.RiskLevelId
+        existing.FinalRiskLevel = chatSession.FinalRiskLevel
+
         self.db.session.commit()
         return existing
 
-    def delete(self, session):
-        session.IsDeleted = True
-        self.db.session.commit()
-        return session
+    def delete(self, chatSession):
+        try:
+            self.db.session.add(chatSession)
+            self.db.session.commit()
+            return chatSession
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise

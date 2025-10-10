@@ -1,4 +1,3 @@
-# repositories/contact_repository.py
 from ConfigDB import db
 from Models.Contact import Contact
 from sqlalchemy.exc import SQLAlchemyError
@@ -15,11 +14,7 @@ class ContactRepository:
 
     def create(self, contact_type_id, description):
         try:
-            new_contact = Contact(
-                ContactTypeId=contact_type_id,
-                Description=description,
-                IsDeleted=False
-            )
+            new_contact = Contact(ContactTypeId=contact_type_id, Description=description, IsDeleted=False)
             self.db.session.add(new_contact)
             self.db.session.commit()
             return new_contact
@@ -37,6 +32,10 @@ class ContactRepository:
         return existing
 
     def delete(self, contact):
-        contact.IsDeleted = True
-        self.db.session.commit()
-        return contact
+        try:
+            self.db.session.add(contact)
+            self.db.session.commit()
+            return contact
+        except SQLAlchemyError:
+            self.db.session.rollback()
+            raise
