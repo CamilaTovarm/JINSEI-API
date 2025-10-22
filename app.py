@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flasgger import Swagger
 from flask_migrate import Migrate
 from ConfigDB import init_db, db, ensure_database_exists
+from Controllers import register_controllers
 import urllib
 import Models
 
@@ -33,6 +34,8 @@ def create_app():
     Migrate(app, db)
     Swagger(app)
 
+    register_controllers(app)
+    
     @app.route("/")
     def index():
         return jsonify({

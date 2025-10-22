@@ -11,5 +11,5 @@ class Contact(db.Model):
     IsDeleted = db.Column(db.Boolean, default=False)
 
     ContactType = db.relationship("ContactType", back_populates="Contacts")
-    Consent = db.relationship("Consent", back_populates="Contacts", cascade="all, delete-orphan")
-
+     # Relación muchos a muchos con Consent
+    Consents = db.relationship("Consent", secondary="ConsentContacts",back_populates="Contacts")

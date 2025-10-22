@@ -12,14 +12,13 @@ class ConsentRepository:
     def get_by_id(self, consent_id):
         return Consent.query.filter_by(ConsentId=consent_id, IsDeleted=False).first()
 
-    def create(self, session_id, full_name, document_type_id, document_number, contact_id):
+    def create(self, session_id, full_name, document_type_id, document_number):
         try:
             new_consent = Consent(
                 SessionId=session_id,
                 FullName=full_name,
                 DocumentTypeId=document_type_id,
                 DocumentNumber=document_number,
-                ContactId=contact_id,
                 IsDeleted=False
             )
             self.db.session.add(new_consent)
@@ -37,7 +36,6 @@ class ConsentRepository:
         existing.FullName = consent.FullName
         existing.DocumentTypeId = consent.DocumentTypeId
         existing.DocumentNumber = consent.DocumentNumber
-        existing.ContactId = consent.ContactId
         self.db.session.commit()
         return existing
 
