@@ -12,7 +12,8 @@ class ChatSession(db.Model):
     FinalRiskLevel = db.Column(db.String(30))
     IsDeleted = db.Column(db.Boolean, default=False)
 
-    messages = db.relationship("Message", backref="Session", cascade="all, delete-orphan")
-    consents = db.relationship("Consent", backref="Session", cascade="all, delete-orphan")
-    risk_level = db.relationship("RiskLevel", backref="Sessions")
-    user = db.relationship("User", backref="Sessions")
+    # Relaciones bidireccionales
+    messages = db.relationship("Message", back_populates="chat_session", cascade="all, delete-orphan")
+    consents = db.relationship("Consent", back_populates="chat_session", cascade="all, delete-orphan")
+    risk_level = db.relationship("RiskLevel", back_populates="chat_sessions")
+    user = db.relationship("User", back_populates="chat_sessions")

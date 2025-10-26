@@ -13,5 +13,6 @@ class Message(db.Model):
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
     IsDeleted = db.Column(db.Boolean, default=False)
 
-    RiskLevel = db.relationship("RiskLevel", backref="Messages")
-    Session = db.relationship("Session", backref="Messages")
+    # Relaciones bidireccionales
+    risk_level = db.relationship("RiskLevel", back_populates="messages")
+    chat_session = db.relationship("ChatSession", back_populates="messages")

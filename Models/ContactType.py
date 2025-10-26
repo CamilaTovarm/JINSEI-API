@@ -7,4 +7,5 @@ class ContactType(db.Model):
     Description = db.Column(db.String(100))
     IsDeleted = db.Column(db.Boolean, default=False)
 
-    Contacts = db.relationship("Contact", backref="ContactType", cascade="all, delete-orphan")
+    # Relación bidireccional con Contact
+    contacts = db.relationship("Contact", back_populates="contact_type", cascade="all, delete-orphan")

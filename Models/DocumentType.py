@@ -7,4 +7,5 @@ class DocumentType(db.Model):
     Description = db.Column(db.String(50), nullable=False)
     IsDeleted = db.Column(db.Boolean, default=False)
 
-    consents = db.relationship("Consent", backref="DocumentType", cascade="all, delete-orphan")
+    # Relación bidireccional con Consent
+    consents = db.relationship("Consent", back_populates="document_type", cascade="all, delete-orphan")

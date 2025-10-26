@@ -10,6 +10,6 @@ class Contact(db.Model):
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
     IsDeleted = db.Column(db.Boolean, default=False)
 
-    ContactType = db.relationship("ContactType", back_populates="Contacts")
-     # Relación muchos a muchos con Consent
-    Consents = db.relationship("Consent", secondary="ConsentContacts",back_populates="Contacts")
+    # Relaciones bidireccionales
+    contact_type = db.relationship("ContactType", back_populates="contacts")
+    consents = db.relationship("Consent", secondary="ConsentContacts", back_populates="contacts")

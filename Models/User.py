@@ -10,4 +10,5 @@ class User(db.Model):
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
     IsDeleted = db.Column(db.Boolean, default=False)
 
-    sessions = db.relationship("Session", backref="user", cascade="all, delete-orphan")
+    # Relación bidireccional con ChatSession
+    chat_sessions = db.relationship("ChatSession", back_populates="user", cascade="all, delete-orphan")

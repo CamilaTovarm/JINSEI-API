@@ -7,6 +7,6 @@ class RiskLevel(db.Model):
     description = db.Column(db.String(100))
     IsDeleted = db.Column(db.Boolean, default=False)
 
-
-    Sessions = db.relationship("Session", backref="RiskLevel", cascade="all, delete-orphan")
-    Messages = db.relationship("Message", backref="RiskLevel", cascade="all, delete-orphan")
+    # Relaciones bidireccionales
+    chat_sessions = db.relationship("ChatSession", back_populates="risk_level", cascade="all, delete-orphan")
+    messages = db.relationship("Message", back_populates="risk_level", cascade="all, delete-orphan")
