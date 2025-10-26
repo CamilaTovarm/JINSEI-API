@@ -6,13 +6,27 @@ class MessageRepository:
     def __init__(self):
         self.db = db
 
-    def get_all(self):
+    def get_all(self, include_deleted=False):
+        """Obtiene todos los mensajes"""
+        if include_deleted:
+            return Message.query.all()
         return Message.query.filter_by(IsDeleted=False).all()
 
-    def get_by_id(self, message_id):
+    def get_by_id(self, message_id, include_deleted=False):
+        """Obtiene un mensaje por ID"""
+        if include_deleted:
+            return Message.query.filter_by(MessageId=message_id).first()
         return Message.query.filter_by(MessageId=message_id, IsDeleted=False).first()
+    
+    def get_by_session_id(self, session_id, include_deleted=False):
+        """Obtiene todos los mensajes de una sesión ordenados por fecha"""
+        query = Message.query.filter_by(SessionId=session_id)
+        if not include_deleted:
+            query = query.filter_by(IsDeleted=False)
+        return query.order_by(Message.CreatedAt).all()
 
-    def create(self, session_id, bot_message, user_response, risk_level_id=None, risk_percent=None):
+    def create(self, session_id, bot_message, user_response=None, risk_level_id=None, risk_percent=None):
+        """Crea un nuevo mensaje"""
         try:
             new_message = Message(
                 SessionId=session_id,
@@ -25,29 +39,52 @@ class MessageRepository:
             self.db.session.add(new_message)
             self.db.session.commit()
             return new_message
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             self.db.session.rollback()
-            raise
+            raise e
 
-    def update(self, message):
-        existing = Message.query.get(message.MessageId)
-        if not existing or existing.IsDeleted:
-            return None
-
-        existing.SessionId = message.SessionId
-        existing.BotMessage = message.BotMessage
-        existing.UserResponse = message.UserResponse
-        existing.RiskLevelId = message.RiskLevelId
-        existing.RiskPercent = message.RiskPercent
-
-        self.db.session.commit()
-        return existing
-
-    def delete(self, message):
+    def update(self, message_id, **kwargs):
+        """Actualiza un mensaje existente"""
         try:
-            self.db.session.add(message)
+            existing = Message.query.get(message_id)
+            if not existing or existing.IsDeleted:
+                return None
+
+            # Actualiza solo los campos proporcionados
+            for key, value in kwargs.items():
+                if hasattr(existing, key):
+                    setattr(existing, key, value)
+
+            self.db.session.commit()
+            return existing
+        except SQLAlchemyError as e:
+            self.db.session.rollback()
+            raise e
+
+    def delete(self, message_id):
+        """Marca un mensaje como eliminado (soft delete)"""
+        try:
+            message = Message.query.get(message_id)
+            if not message:
+                return None
+            
+            message.IsDeleted = True
             self.db.session.commit()
             return message
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             self.db.session.rollback()
-            raise
+            raise e
+    
+    def restore(self, message_id):
+        """Restaura un mensaje marcado como eliminado"""
+        try:
+            message = Message.query.get(message_id)
+            if not message:
+                return None
+            
+            message.IsDeleted = False
+            self.db.session.commit()
+            return message
+        except SQLAlchemyError as e:
+            self.db.session.rollback()
+            raise e

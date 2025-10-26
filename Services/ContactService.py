@@ -1,34 +1,153 @@
 from Repositories.ContactRepository import ContactRepository
+from Repositories.ContactTypeRepository import ContactTypeRepository
+from sqlalchemy.exc import SQLAlchemyError
+import re
 
 class ContactService:
     def __init__(self):
         self._contact_repository = ContactRepository()
+        self._contact_type_repository = ContactTypeRepository()
 
-    def get_all_contacts(self):
-        return self._contact_repository.get_all()
+    def get_all_contacts(self, include_deleted=False):
+        """Obtiene todos los contactos"""
+        try:
+            return self._contact_repository.get_all(include_deleted=include_deleted)
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener contactos: {str(e)}")
 
-    def get_contact_by_id(self, contact_id):
-        return self._contact_repository.get_by_id(contact_id)
+    def get_contact_by_id(self, contact_id, include_deleted=False):
+        """Obtiene un contacto por ID"""
+        try:
+            contact = self._contact_repository.get_by_id(contact_id, include_deleted=include_deleted)
+            if not contact:
+                raise Exception(f"El contacto con ID {contact_id} no existe.")
+            return contact
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener contacto: {str(e)}")
+    
+    def get_contacts_by_type(self, contact_type_id, include_deleted=False):
+        """
+        Obtiene todos los contactos de un tipo específico.
+        
+        Ejemplos:
+            - contact_type_id=1 → Todos los emails
+            - contact_type_id=2 → Todos los teléfonos
+        """
+        try:
+            contact_type = self._contact_type_repository.get_by_id(contact_type_id)
+            if not contact_type:
+                raise Exception(f"El tipo de contacto con ID {contact_type_id} no existe.")
+            
+            return self._contact_repository.get_by_type(contact_type_id, include_deleted=include_deleted)
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener contactos por tipo: {str(e)}")
 
-    def create_contact(self, contact_type_id, description):
-        return self._contact_repository.create(contact_type_id, description)
+    def _validate_contact_value(self, contact_type_id, value):
+        """
+        Valida el valor del contacto según su tipo.
+        
+        Args:
+            contact_type_id: 1=Email, 2=Teléfono, etc.
+            value: El valor a validar (email o teléfono)
+        """
+        EMAIL_TYPE_ID = 1
+        PHONE_TYPE_ID = 2
+        
+        if contact_type_id == EMAIL_TYPE_ID:
+            # Validar email
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, value):
+                raise Exception(f"El email '{value}' no tiene un formato válido.")
+        
+        elif contact_type_id == PHONE_TYPE_ID:
+            # Validar teléfono
+            phone_clean = re.sub(r'[\s\-\(\)\+]', '', value)
+            if not phone_clean.isdigit() or len(phone_clean) < 7 or len(phone_clean) > 15:
+                raise Exception(f"El teléfono '{value}' no tiene un formato válido.")
 
-    def update_contact(self, contact_id, contact_type_id=None, description=None):
-        contact = self._contact_repository.get_by_id(contact_id)
-        if not contact:
-            raise Exception(f"The contact with ID {contact_id} doesn't exist.")
+    def create_contact(self, contact_type_id, value):
+        """
+        Crea un nuevo contacto.
+        
+        Args:
+            contact_type_id: ID del tipo de contacto (1=Email, 2=Teléfono, etc.)
+            value: El valor del contacto (ej: "usuario@email.com" o "+57 300 123 4567")
+                   Este valor se guarda en la columna Description
+        
+        Ejemplos:
+            create_contact(1, "juan@email.com")  # Crea un email
+            create_contact(2, "+57 300 123 4567")  # Crea un teléfono
+        """
+        try:
+            # Validar que el tipo de contacto existe
+            contact_type = self._contact_type_repository.get_by_id(contact_type_id)
+            if not contact_type:
+                raise Exception(f"El tipo de contacto con ID {contact_type_id} no existe.")
+            
+            # Validar el formato del valor según el tipo
+            self._validate_contact_value(contact_type_id, value)
+            
+            # Crear el contacto (value se guarda en Description)
+            return self._contact_repository.create(contact_type_id, value)
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al crear contacto: {str(e)}")
 
-        if contact_type_id is not None:
-            contact.ContactTypeId = contact_type_id
-        if description is not None:
-            contact.Description = description
-
-        return self._contact_repository.update(contact)
+    def update_contact(self, contact_id, contact_type_id=None, value=None):
+        """
+        Actualiza un contacto existente.
+        
+        Args:
+            contact_id: ID del contacto a actualizar
+            contact_type_id: Nuevo tipo de contacto (opcional)
+            value: Nuevo valor (email o teléfono) (opcional)
+        """
+        try:
+            # Validar que el contacto existe
+            contact = self._contact_repository.get_by_id(contact_id)
+            if not contact:
+                raise Exception(f"El contacto con ID {contact_id} no existe.")
+            
+            update_data = {}
+            
+            # Si se cambia el tipo de contacto
+            if contact_type_id is not None:
+                contact_type = self._contact_type_repository.get_by_id(contact_type_id)
+                if not contact_type:
+                    raise Exception(f"El tipo de contacto con ID {contact_type_id} no existe.")
+                update_data['ContactTypeId'] = contact_type_id
+            
+            # Si se cambia el valor
+            if value is not None:
+                # Validar según el tipo (el actual o el nuevo)
+                type_to_validate = contact_type_id if contact_type_id is not None else contact.ContactTypeId
+                self._validate_contact_value(type_to_validate, value)
+                update_data['Description'] = value
+            
+            return self._contact_repository.update(contact_id, **update_data)
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al actualizar contacto: {str(e)}")
 
     def delete_contact(self, contact_id):
-        contact_to_delete = self._contact_repository.get_by_id(contact_id)
-        if not contact_to_delete:
-            raise Exception(f"The contact with ID {contact_id} doesn't exist.")
-
-        contact_to_delete.IsDeleted = True
-        return self._contact_repository.delete(contact_to_delete)
+        """Marca un contacto como eliminado (soft delete)"""
+        try:
+            contact = self._contact_repository.get_by_id(contact_id)
+            if not contact:
+                raise Exception(f"El contacto con ID {contact_id} no existe.")
+            
+            return self._contact_repository.delete(contact_id)
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al eliminar contacto: {str(e)}")
+    
+    def restore_contact(self, contact_id):
+        """Restaura un contacto marcado como eliminado"""
+        try:
+            contact = self._contact_repository.get_by_id(contact_id, include_deleted=True)
+            if not contact:
+                raise Exception(f"El contacto con ID {contact_id} no existe.")
+            
+            if not contact.IsDeleted:
+                raise Exception(f"El contacto con ID {contact_id} no está eliminado.")
+            
+            return self._contact_repository.restore(contact_id)
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al restaurar contacto: {str(e)}")

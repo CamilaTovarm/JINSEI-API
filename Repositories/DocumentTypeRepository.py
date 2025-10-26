@@ -6,35 +6,67 @@ class DocumentTypeRepository:
     def __init__(self):
         self.db = db
 
-    def get_all(self):
+    def get_all(self, include_deleted=False):
+        """Obtiene todos los tipos de documento"""
+        if include_deleted:
+            return DocumentType.query.all()
         return DocumentType.query.filter_by(IsDeleted=False).all()
 
-    def get_by_id(self, document_type_id):
+    def get_by_id(self, document_type_id, include_deleted=False):
+        """Obtiene un tipo de documento por ID"""
+        if include_deleted:
+            return DocumentType.query.filter_by(DocumentTypeId=document_type_id).first()
         return DocumentType.query.filter_by(DocumentTypeId=document_type_id, IsDeleted=False).first()
 
     def create(self, description):
+        """Crea un nuevo tipo de documento"""
         try:
             new_document_type = DocumentType(Description=description, IsDeleted=False)
             self.db.session.add(new_document_type)
             self.db.session.commit()
             return new_document_type
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             self.db.session.rollback()
-            raise
+            raise e
 
-    def update(self, document_type):
-        existing = DocumentType.query.get(document_type.DocumentTypeId)
-        if not existing or existing.IsDeleted:
-            return None
-        existing.Description = document_type.Description
-        self.db.session.commit()
-        return existing
-
-    def delete(self, document_type):
+    def update(self, document_type_id, description):
+        """Actualiza un tipo de documento existente"""
         try:
-            self.db.session.add(document_type)
+            existing = DocumentType.query.get(document_type_id)
+            if not existing or existing.IsDeleted:
+                return None
+            
+            existing.Description = description
+            self.db.session.commit()
+            return existing
+        except SQLAlchemyError as e:
+            self.db.session.rollback()
+            raise e
+
+    def delete(self, document_type_id):
+        """Marca un tipo de documento como eliminado (soft delete)"""
+        try:
+            document_type = DocumentType.query.get(document_type_id)
+            if not document_type:
+                return None
+            
+            document_type.IsDeleted = True
             self.db.session.commit()
             return document_type
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             self.db.session.rollback()
-            raise
+            raise e
+    
+    def restore(self, document_type_id):
+        """Restaura un tipo de documento marcado como eliminado"""
+        try:
+            document_type = DocumentType.query.get(document_type_id)
+            if not document_type:
+                return None
+            
+            document_type.IsDeleted = False
+            self.db.session.commit()
+            return document_type
+        except SQLAlchemyError as e:
+            self.db.session.rollback()
+            raise e
