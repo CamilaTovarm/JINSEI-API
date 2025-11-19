@@ -504,3 +504,247 @@ def restore_session(session_id):
             'success': False,
             'error': str(e)
         }), status_code
+    
+
+
+@session_bp.route('/sessions/<int:session_id>/history', methods=['GET'])
+@swag_from({
+    'tags': ['Sessions'],
+    'summary': 'Obtener historial de mensajes de una sesión',
+    'description': 'Retorna toda la información de una sesión junto con el historial completo de mensajes intercambiados.',
+    'parameters': [
+        {
+            'name': 'session_id',
+            'in': 'path',
+            'type': 'integer',
+            'required': True,
+            'description': 'ID de la sesión'
+        },
+        {
+            'name': 'include_deleted',
+            'in': 'query',
+            'type': 'boolean',
+            'required': False,
+            'default': False,
+            'description': 'Incluir mensajes eliminados'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Historial de mensajes obtenido exitosamente',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'success': {'type': 'boolean'},
+                    'data': {
+                        'type': 'object',
+                        'properties': {
+                            'session': {
+                                'type': 'object',
+                                'properties': {
+                                    'SessionId': {'type': 'integer'},
+                                    'UserId': {'type': 'integer'},
+                                    'StartTime': {'type': 'string'},
+                                    'EndTime': {'type': 'string'},
+                                    'RiskLevelId': {'type': 'integer'},
+                                    'FinalRiskLevel': {'type': 'number'}
+                                }
+                            },
+                            'messages': {
+                                'type': 'array',
+                                'items': {
+                                    'type': 'object',
+                                    'properties': {
+                                        'MessageId': {'type': 'integer'},
+                                        'BotMessage': {'type': 'string'},
+                                        'UserResponse': {'type': 'string'},
+                                        'RiskPercent': {'type': 'number'},
+                                        'CreatedAt': {'type': 'string'}
+                                    }
+                                }
+                            },
+                            'total_messages': {'type': 'integer'}
+                        }
+                    }
+                }
+            }
+        },
+        404: {'description': 'Sesión no encontrada'},
+        500: {'description': 'Error del servidor'}
+    }
+})
+def get_session_history(session_id):
+    """Obtiene el historial completo de mensajes de una sesión"""
+    try:
+        include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
+        history = session_service.get_session_messages_history(session_id, include_deleted=include_deleted)
+        
+        session = history['session']
+        messages = history['messages']
+        
+        # Serializar sesión
+        session_data = {
+            'SessionId': session.SessionId,
+            'UserId': session.UserId,
+            'StartTime': session.StartTime.isoformat() if session.StartTime else None,
+            'EndTime': session.EndTime.isoformat() if session.EndTime else None,
+            'RiskLevelId': session.RiskLevelId,
+            'FinalRiskLevel': session.FinalRiskLevel,
+            'IsDeleted': session.IsDeleted
+        }
+        
+        # Serializar mensajes
+        messages_data = [{
+            'MessageId': msg.MessageId,
+            'SessionId': msg.SessionId,
+            'BotMessage': msg.BotMessage,
+            'UserResponse': msg.UserResponse,
+            'RiskLevelId': msg.RiskLevelId,
+            'RiskPercent': msg.RiskPercent,
+            'CreatedAt': msg.CreatedAt.isoformat() if msg.CreatedAt else None,
+            'IsDeleted': msg.IsDeleted
+        } for msg in messages]
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'session': session_data,
+                'messages': messages_data,
+                'total_messages': history['total_messages']
+            }
+        }), 200
+    except Exception as e:
+        status_code = 404 if 'no existe' in str(e) else 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), status_code
+
+
+@session_bp.route('/users/<int:user_id>/history', methods=['GET'])
+@swag_from({
+    'tags': ['Sessions'],
+    'summary': 'Obtener historial completo de un usuario',
+    'description': 'Retorna todas las sesiones del usuario con sus respectivos mensajes. Útil para ver el historial completo de conversaciones.',
+    'parameters': [
+        {
+            'name': 'user_id',
+            'in': 'path',
+            'type': 'integer',
+            'required': True,
+            'description': 'ID del usuario'
+        },
+        {
+            'name': 'include_deleted',
+            'in': 'query',
+            'type': 'boolean',
+            'required': False,
+            'default': False,
+            'description': 'Incluir sesiones y mensajes eliminados'
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Historial completo obtenido exitosamente',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'success': {'type': 'boolean'},
+                    'data': {
+                        'type': 'object',
+                        'properties': {
+                            'user': {
+                                'type': 'object',
+                                'properties': {
+                                    'UserId': {'type': 'integer'},
+                                    'AKA': {'type': 'string'},
+                                    'CreatedAt': {'type': 'string'}
+                                }
+                            },
+                            'sessions': {
+                                'type': 'array',
+                                'items': {
+                                    'type': 'object',
+                                    'properties': {
+                                        'session': {'type': 'object'},
+                                        'messages': {'type': 'array'},
+                                        'message_count': {'type': 'integer'}
+                                    }
+                                }
+                            },
+                            'total_sessions': {'type': 'integer'},
+                            'total_messages': {'type': 'integer'}
+                        }
+                    }
+                }
+            }
+        },
+        404: {'description': 'Usuario no encontrado'},
+        500: {'description': 'Error del servidor'}
+    }
+})
+def get_user_history(user_id):
+    """Obtiene el historial completo de sesiones y mensajes de un usuario"""
+    try:
+        include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
+        history = session_service.get_user_complete_history(user_id, include_deleted=include_deleted)
+        
+        user = history['user']
+        sessions_with_messages = history['sessions']
+        
+        # Serializar usuario
+        user_data = {
+            'UserId': user.UserId,
+            'AKA': user.AKA,
+            'CreatedAt': user.CreatedAt.isoformat() if user.CreatedAt else None,
+            'IsDeleted': user.IsDeleted
+        }
+        
+        # Serializar sesiones con sus mensajes
+        sessions_data = []
+        for item in sessions_with_messages:
+            session = item['session']
+            messages = item['messages']
+            
+            session_info = {
+                'SessionId': session.SessionId,
+                'UserId': session.UserId,
+                'StartTime': session.StartTime.isoformat() if session.StartTime else None,
+                'EndTime': session.EndTime.isoformat() if session.EndTime else None,
+                'RiskLevelId': session.RiskLevelId,
+                'FinalRiskLevel': session.FinalRiskLevel,
+                'IsDeleted': session.IsDeleted
+            }
+            
+            messages_info = [{
+                'MessageId': msg.MessageId,
+                'SessionId': msg.SessionId,
+                'BotMessage': msg.BotMessage,
+                'UserResponse': msg.UserResponse,
+                'RiskLevelId': msg.RiskLevelId,
+                'RiskPercent': msg.RiskPercent,
+                'CreatedAt': msg.CreatedAt.isoformat() if msg.CreatedAt else None,
+                'IsDeleted': msg.IsDeleted
+            } for msg in messages]
+            
+            sessions_data.append({
+                'session': session_info,
+                'messages': messages_info,
+                'message_count': item['message_count']
+            })
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'user': user_data,
+                'sessions': sessions_data,
+                'total_sessions': history['total_sessions'],
+                'total_messages': history['total_messages']
+            }
+        }), 200
+    except Exception as e:
+        status_code = 404 if 'no existe' in str(e) else 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), status_code

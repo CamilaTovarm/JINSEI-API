@@ -228,3 +228,81 @@ class SessionService:
             return self._session_repository.restore(session_id)
         except SQLAlchemyError as e:
             raise Exception(f"Error al restaurar sesión: {str(e)}")
+        
+
+
+    def get_session_messages_history(self, session_id, include_deleted=False):
+        """
+        Obtiene el historial completo de mensajes de una sesión específica.
+        
+        Args:
+            session_id: ID de la sesión
+            include_deleted: Si incluir mensajes eliminados
+            
+        Returns:
+            dict: Información de la sesión con su historial de mensajes
+        """
+        try:
+            # Validar que la sesión existe
+            session = self._session_repository.get_by_id(session_id, include_deleted=include_deleted)
+            if not session:
+                raise Exception(f"La sesión con ID {session_id} no existe.")
+            
+            # Obtener todos los mensajes de la sesión
+            messages = self._message_repository.get_by_session_id(session_id, include_deleted=include_deleted)
+            
+            # Construir respuesta con información de la sesión y mensajes
+            return {
+                'session': session,
+                'messages': messages,
+                'total_messages': len(messages)
+            }
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener historial de mensajes: {str(e)}")
+    
+    def get_user_complete_history(self, user_id, include_deleted=False):
+        """
+        Obtiene el historial completo de todas las sesiones y mensajes de un usuario.
+        
+        Args:
+            user_id: ID del usuario
+            include_deleted: Si incluir sesiones y mensajes eliminados
+            
+        Returns:
+            dict: Información del usuario con todas sus sesiones y mensajes
+        """
+        try:
+            # Validar que el usuario existe
+            user = self._user_repository.get_by_id(user_id, include_deleted=include_deleted)
+            if not user:
+                raise Exception(f"El usuario con ID {user_id} no existe.")
+            
+            # Obtener todas las sesiones del usuario
+            sessions = self._session_repository.get_by_user_id(user_id, include_deleted=include_deleted)
+            
+            # Para cada sesión, obtener sus mensajes
+            sessions_with_messages = []
+            total_messages = 0
+            
+            for session in sessions:
+                messages = self._message_repository.get_by_session_id(
+                    session.SessionId, 
+                    include_deleted=include_deleted
+                )
+                
+                sessions_with_messages.append({
+                    'session': session,
+                    'messages': messages,
+                    'message_count': len(messages)
+                })
+                
+                total_messages += len(messages)
+            
+            return {
+                'user': user,
+                'sessions': sessions_with_messages,
+                'total_sessions': len(sessions),
+                'total_messages': total_messages
+            }
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener historial completo del usuario: {str(e)}")
