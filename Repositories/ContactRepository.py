@@ -6,36 +6,82 @@ class ContactRepository:
     def __init__(self):
         self.db = db
 
-    def get_all(self):
+    def get_all(self, include_deleted=False):
+        """Obtiene todos los contactos"""
+        if include_deleted:
+            return Contact.query.all()
         return Contact.query.filter_by(IsDeleted=False).all()
 
-    def get_by_id(self, contact_id):
+    def get_by_id(self, contact_id, include_deleted=False):
+        """Obtiene un contacto por ID"""
+        if include_deleted:
+            return Contact.query.filter_by(ContactId=contact_id).first()
         return Contact.query.filter_by(ContactId=contact_id, IsDeleted=False).first()
+    
+    def get_by_type(self, contact_type_id, include_deleted=False):
+        """Obtiene todos los contactos de un tipo específico"""
+        query = Contact.query.filter_by(ContactTypeId=contact_type_id)
+        if not include_deleted:
+            query = query.filter_by(IsDeleted=False)
+        return query.all()
 
     def create(self, contact_type_id, description):
+        """Crea un nuevo contacto"""
         try:
-            new_contact = Contact(ContactTypeId=contact_type_id, Description=description, IsDeleted=False)
+            new_contact = Contact(
+                ContactTypeId=contact_type_id,
+                Description=description,
+                IsDeleted=False
+            )
             self.db.session.add(new_contact)
             self.db.session.commit()
             return new_contact
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             self.db.session.rollback()
-            raise
+            raise e
 
-    def update(self, contact):
-        existing = Contact.query.get(contact.ContactId)
-        if not existing or existing.IsDeleted:
-            return None
-        existing.ContactTypeId = contact.ContactTypeId
-        existing.Description = contact.Description
-        self.db.session.commit()
-        return existing
-
-    def delete(self, contact):
+    def update(self, contact_id, **kwargs):
+        """Actualiza un contacto existente"""
         try:
-            self.db.session.add(contact)
+            existing = Contact.query.get(contact_id)
+            if not existing or existing.IsDeleted:
+                return None
+            
+            # Actualiza solo los campos proporcionados
+            for key, value in kwargs.items():
+                if hasattr(existing, key):
+                    setattr(existing, key, value)
+            
+            self.db.session.commit()
+            return existing
+        except SQLAlchemyError as e:
+            self.db.session.rollback()
+            raise e
+
+    def delete(self, contact_id):
+        """Marca un contacto como eliminado (soft delete)"""
+        try:
+            contact = Contact.query.get(contact_id)
+            if not contact:
+                return None
+            
+            contact.IsDeleted = True
             self.db.session.commit()
             return contact
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
             self.db.session.rollback()
-            raise
+            raise e
+    
+    def restore(self, contact_id):
+        """Restaura un contacto marcado como eliminado"""
+        try:
+            contact = Contact.query.get(contact_id)
+            if not contact:
+                return None
+            
+            contact.IsDeleted = False
+            self.db.session.commit()
+            return contact
+        except SQLAlchemyError as e:
+            self.db.session.rollback()
+            raise e

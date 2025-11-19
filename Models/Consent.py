@@ -12,7 +12,7 @@ class Consent(db.Model):
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
     IsDeleted = db.Column(db.Boolean, default=False)
 
-    DocumentType = db.relationship("DocumentType", backref="Consents")
-    Session = db.relationship("Session", backref="Consents")
-    # Relación muchos a muchos con Contact
-    Contacts = db.relationship("Contact", secondary="ConsentContacts", back_populates="Consents")
+    # Relaciones bidireccionales
+    document_type = db.relationship("DocumentType", back_populates="consents")
+    chat_session = db.relationship("ChatSession", back_populates="consents")
+    contacts = db.relationship("Contact", secondary="ConsentContacts", back_populates="consents")

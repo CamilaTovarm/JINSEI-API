@@ -1,5 +1,3 @@
-# repositories/__init__.py
-
 from .UserRepository import UserRepository
 from .SessionRepository import SessionRepository
 from .MessageRepository import MessageRepository
