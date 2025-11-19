@@ -1,3 +1,4 @@
+from Repositories.MessageRepository import MessageRepository
 from Repositories.UserRepository import UserRepository
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,6 +7,7 @@ import re
 class UserService:
     def __init__(self):
         self._user_repository = UserRepository()
+        self._message_repository = MessageRepository()
 
     def get_all_users(self, include_deleted=False):
         """Obtiene todos los usuarios"""
@@ -33,6 +35,7 @@ class UserService:
             return user
         except SQLAlchemyError as e:
             raise Exception(f"Error al buscar usuario: {str(e)}")
+    
 
     def encrypt_password(self, password):
         """

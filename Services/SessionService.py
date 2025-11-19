@@ -1,5 +1,7 @@
 from Repositories.SessionRepository import SessionRepository
 from Repositories.UserRepository import UserRepository
+from Repositories.MessageRepository import MessageRepository
+from Repositories.RiskLevelRepository import RiskLevelRepository
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 
@@ -7,6 +9,8 @@ class SessionService:
     def __init__(self):
         self._session_repository = SessionRepository()
         self._user_repository = UserRepository()
+        self._message_repository = MessageRepository()
+        self._risk_level_repository = RiskLevelRepository()
 
     def get_all_sessions(self, include_deleted=False):
         """Obtiene todas las sesiones"""
@@ -44,8 +48,81 @@ class SessionService:
         except SQLAlchemyError as e:
             raise Exception(f"Error al obtener sesión activa: {str(e)}")
 
-    def create_session(self, user_id, start_time=None, end_time=None, risk_level_id=None, final_risk_level=None):
-        """Crea una nueva sesión"""
+    def _calculate_risk_level_id(self, average_percent):
+        """
+        Determina el RiskLevelId basado en el promedio de porcentaje.
+        
+        Rangos sugeridos (ajusta según tus necesidades):
+        - Bajo: 0-33%
+        - Medio: 34-66%
+        - Alto: 67-100%
+        
+        Retorna el ID correspondiente de la tabla RiskLevels
+        """
+        try:
+            # Obtener todos los niveles de riesgo
+            risk_levels = self._risk_level_repository.get_all()
+            
+            if not risk_levels:
+                return None
+            
+            # Asumiendo que los IDs son: 1=Bajo, 2=Medio, 3=Alto
+            # Ajusta estos valores según tu tabla RiskLevels
+            if average_percent <= 33:
+                # Buscar "Bajo" en la descripción
+                for level in risk_levels:
+                    if level.description and 'bajo' in level.description.lower():
+                        return level.RiskLevelId
+                return 1  # Fallback al ID 1
+            elif average_percent <= 66:
+                # Buscar "Medio" en la descripción
+                for level in risk_levels:
+                    if level.description and 'medio' in level.description.lower():
+                        return level.RiskLevelId
+                return 2  # Fallback al ID 2
+            else:
+                # Buscar "Alto" en la descripción
+                for level in risk_levels:
+                    if level.description and 'alto' in level.description.lower():
+                        return level.RiskLevelId
+                return 3  # Fallback al ID 3
+        except Exception as e:
+            print(f"Error al calcular RiskLevelId: {str(e)}")
+            return None
+
+    def _calculate_average_risk(self, session_id):
+        """
+        Calcula el promedio de RiskPercent de todos los mensajes de una sesión.
+        
+        Returns:
+            float: Promedio de los porcentajes de riesgo, o 0 si no hay mensajes
+        """
+        try:
+            # Obtener todos los mensajes de la sesión
+            messages = self._message_repository.get_by_session_id(session_id, include_deleted=False)
+            
+            if not messages:
+                return 0.0
+            
+            # Filtrar mensajes que tienen RiskPercent no nulo
+            risk_percentages = [msg.RiskPercent for msg in messages if msg.RiskPercent is not None]
+            
+            if not risk_percentages:
+                return 0.0
+            
+            # Calcular promedio
+            average = sum(risk_percentages) / len(risk_percentages)
+            return round(average, 2)  # Redondear a 2 decimales
+            
+        except Exception as e:
+            print(f"Error al calcular promedio de riesgo: {str(e)}")
+            return 0.0
+
+    def create_session(self, user_id):
+        """
+        Crea una nueva sesión (sin solicitar risk_level_id ni final_risk_level).
+        Estos campos se calcularán automáticamente al finalizar la sesión.
+        """
         try:
             # Validar que el usuario existe
             user = self._user_repository.get_by_id(user_id)
@@ -57,43 +134,50 @@ class SessionService:
             if active_session:
                 raise Exception(f"El usuario ya tiene una sesión activa (ID: {active_session.SessionId}).")
             
+            # Crear sesión sin RiskLevelId ni FinalRiskLevel
             return self._session_repository.create(
                 user_id=user_id,
-                start_time=start_time or datetime.utcnow(),
-                end_time=end_time,
-                risk_level_id=risk_level_id,
-                final_risk_level=final_risk_level
+                start_time=datetime.utcnow(),
+                end_time=None,
+                risk_level_id=None,
+                final_risk_level=None
             )
         except SQLAlchemyError as e:
             raise Exception(f"Error al crear sesión: {str(e)}")
 
-    def update_session(self, session_id, user_id=None, start_time=None, end_time=None, risk_level_id=None, final_risk_level=None):
-        """Actualiza una sesión existente"""
+    def update_session(self, session_id, user_id=None):
+        """
+        Actualiza una sesión existente.
+        Solo permite actualizar el user_id.
+        Los campos de riesgo se calculan automáticamente al finalizar.
+        """
         try:
             # Validar que la sesión existe
             session = self._session_repository.get_by_id(session_id)
             if not session:
                 raise Exception(f"La sesión con ID {session_id} no existe.")
             
-            # ✅ Usamos el método update() corregido con **kwargs
             update_data = {}
             if user_id is not None:
+                # Validar que el nuevo usuario existe
+                user = self._user_repository.get_by_id(user_id)
+                if not user:
+                    raise Exception(f"El usuario con ID {user_id} no existe.")
                 update_data['UserId'] = user_id
-            if start_time is not None:
-                update_data['StartTime'] = start_time
-            if end_time is not None:
-                update_data['EndTime'] = end_time
-            if risk_level_id is not None:
-                update_data['RiskLevelId'] = risk_level_id
-            if final_risk_level is not None:
-                update_data['FinalRiskLevel'] = final_risk_level
+            
+            if not update_data:
+                raise Exception("No se proporcionaron campos para actualizar.")
             
             return self._session_repository.update(session_id, **update_data)
         except SQLAlchemyError as e:
             raise Exception(f"Error al actualizar sesión: {str(e)}")
     
-    def end_session(self, session_id, final_risk_level=None):
-        """Finaliza una sesión estableciendo el EndTime"""
+    def end_session(self, session_id):
+        """
+        Finaliza una sesión calculando automáticamente:
+        1. El promedio de RiskPercent de todos los mensajes (FinalRiskLevel)
+        2. El RiskLevelId correspondiente según el promedio
+        """
         try:
             session = self._session_repository.get_by_id(session_id)
             if not session:
@@ -102,7 +186,21 @@ class SessionService:
             if session.EndTime is not None:
                 raise Exception(f"La sesión con ID {session_id} ya está finalizada.")
             
-            return self._session_repository.end_session(session_id, final_risk_level)
+            # Calcular el promedio de riesgo de todos los mensajes
+            average_risk = self._calculate_average_risk(session_id)
+            
+            # Determinar el RiskLevelId basado en el promedio
+            risk_level_id = self._calculate_risk_level_id(average_risk)
+            
+            # Actualizar la sesión con EndTime, FinalRiskLevel (promedio) y RiskLevelId
+            update_data = {
+                'EndTime': datetime.utcnow(),
+                'FinalRiskLevel': average_risk,  # Guardamos el promedio numérico
+                'RiskLevelId': risk_level_id
+            }
+            
+            return self._session_repository.update(session_id, **update_data)
+            
         except SQLAlchemyError as e:
             raise Exception(f"Error al finalizar sesión: {str(e)}")
 
@@ -113,7 +211,6 @@ class SessionService:
             if not session:
                 raise Exception(f"La sesión con ID {session_id} no existe.")
             
-            # ✅ Solo pasamos el ID
             return self._session_repository.delete(session_id)
         except SQLAlchemyError as e:
             raise Exception(f"Error al eliminar sesión: {str(e)}")
@@ -131,3 +228,81 @@ class SessionService:
             return self._session_repository.restore(session_id)
         except SQLAlchemyError as e:
             raise Exception(f"Error al restaurar sesión: {str(e)}")
+        
+
+
+    def get_session_messages_history(self, session_id, include_deleted=False):
+        """
+        Obtiene el historial completo de mensajes de una sesión específica.
+        
+        Args:
+            session_id: ID de la sesión
+            include_deleted: Si incluir mensajes eliminados
+            
+        Returns:
+            dict: Información de la sesión con su historial de mensajes
+        """
+        try:
+            # Validar que la sesión existe
+            session = self._session_repository.get_by_id(session_id, include_deleted=include_deleted)
+            if not session:
+                raise Exception(f"La sesión con ID {session_id} no existe.")
+            
+            # Obtener todos los mensajes de la sesión
+            messages = self._message_repository.get_by_session_id(session_id, include_deleted=include_deleted)
+            
+            # Construir respuesta con información de la sesión y mensajes
+            return {
+                'session': session,
+                'messages': messages,
+                'total_messages': len(messages)
+            }
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener historial de mensajes: {str(e)}")
+    
+    def get_user_complete_history(self, user_id, include_deleted=False):
+        """
+        Obtiene el historial completo de todas las sesiones y mensajes de un usuario.
+        
+        Args:
+            user_id: ID del usuario
+            include_deleted: Si incluir sesiones y mensajes eliminados
+            
+        Returns:
+            dict: Información del usuario con todas sus sesiones y mensajes
+        """
+        try:
+            # Validar que el usuario existe
+            user = self._user_repository.get_by_id(user_id, include_deleted=include_deleted)
+            if not user:
+                raise Exception(f"El usuario con ID {user_id} no existe.")
+            
+            # Obtener todas las sesiones del usuario
+            sessions = self._session_repository.get_by_user_id(user_id, include_deleted=include_deleted)
+            
+            # Para cada sesión, obtener sus mensajes
+            sessions_with_messages = []
+            total_messages = 0
+            
+            for session in sessions:
+                messages = self._message_repository.get_by_session_id(
+                    session.SessionId, 
+                    include_deleted=include_deleted
+                )
+                
+                sessions_with_messages.append({
+                    'session': session,
+                    'messages': messages,
+                    'message_count': len(messages)
+                })
+                
+                total_messages += len(messages)
+            
+            return {
+                'user': user,
+                'sessions': sessions_with_messages,
+                'total_sessions': len(sessions),
+                'total_messages': total_messages
+            }
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al obtener historial completo del usuario: {str(e)}")
