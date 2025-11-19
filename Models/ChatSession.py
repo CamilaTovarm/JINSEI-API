@@ -9,7 +9,7 @@ class ChatSession(db.Model):
     StartTime = db.Column(db.DateTime, default=datetime.utcnow)
     EndTime = db.Column(db.DateTime)
     RiskLevelId = db.Column(db.Integer, db.ForeignKey("RiskLevels.RiskLevelId"))
-    FinalRiskLevel = db.Column(db.String(30))
+    FinalRiskLevel = db.Column(db.Float)
     IsDeleted = db.Column(db.Boolean, default=False)
 
     # Relaciones bidireccionales
