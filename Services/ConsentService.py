@@ -4,6 +4,7 @@ from Repositories.ConsentContactRepository import ConsentContactRepository
 from Repositories.SessionRepository import SessionRepository
 from Repositories.DocumentTypeRepository import DocumentTypeRepository
 from Repositories.ContactTypeRepository import ContactTypeRepository
+from Services.EmailService import EmailService
 from sqlalchemy.exc import SQLAlchemyError
 import re
 
@@ -131,6 +132,43 @@ class ConsentService:
                 new_consent.ConsentId, 
                 phone_contact.ContactId
             )
+
+            # ============================================================
+            # 9️⃣ ENVIAR CORREO DE ALERTA AUTOMÁTICAMENTE
+            # ============================================================
+            try:
+                # Obtener la instancia de Flask-Mail desde el contexto de la app
+                from app import mail
+                email_service = EmailService(mail)
+                
+                # Preparar datos para el correo
+                consent_data = {
+                    'ConsentId': new_consent.ConsentId,
+                    'FullName': full_name,
+                    'DocumentNumber': document_number,
+                    'DocumentType': doc_type.Description,
+                    'SessionId': session_id,
+                    'CreatedAt': new_consent.CreatedAt
+                }
+                
+                contact_data = {
+                    'email': email,
+                    'phone': phone
+                }
+                
+                # Enviar correo de alerta
+                email_sent = email_service.send_consent_alert_email(consent_data, contact_data)
+                
+                if email_sent:
+                    print(f"✅ Correo de alerta enviado por consentimiento ID: {new_consent.ConsentId}")
+                else:
+                    print(f"⚠️ No se pudo enviar el correo de alerta para el consentimiento ID: {new_consent.ConsentId}")
+                    # No lanzamos excepción para que no falle la creación del consentimiento
+                    
+            except Exception as email_error:
+                # Registrar el error pero no fallar la creación del consentimiento
+                print(f"⚠️ Error al enviar correo de alerta: {str(email_error)}")
+            # ============================================================
 
             return new_consent
 

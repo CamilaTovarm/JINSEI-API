@@ -7,6 +7,7 @@ from .ContactTypeService import ContactTypeService
 from .DocumentTypeService import DocumentTypeService
 from .RiskLevelService import RiskLevelService
 from .LoginService import AuthService
+from .EmailService import EmailService
 
 __all__ = [
     "UserService",
@@ -17,5 +18,6 @@ __all__ = [
     "ContactTypeService",
     "DocumentTypeService",
     "RiskLevelService",
-    "AuthService"
+    "AuthService",
+    "EmailService"
 ]
