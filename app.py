@@ -16,7 +16,7 @@ def create_app():
 
     # Cadena de conexión directa para Azure SQL Database
     connection_string = (
-        "DRIVER={ODBC Driver 17for SQL Server};"
+        "DRIVER={ODBC Driver 17 for SQL Server};"
         "SERVER=tcp:jinsei.database.windows.net,1433;"
         "DATABASE=JINSEI;"
         "UID=adminJinsei;"
