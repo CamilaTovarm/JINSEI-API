@@ -35,5 +35,5 @@ def ensure_database_exists(server_name: str, database_name: str):
 
 
 def init_db(app):
-    """Inicializa SQLAlchemy dentro de la app Flask"""
+
     db.init_app(app)
