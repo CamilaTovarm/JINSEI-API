@@ -14,6 +14,7 @@ def register_controllers(app):
     from .DocumentTypeController import document_type_bp
     from .RiskLevelController import risk_level_bp
     from .LoginController import auth_bp
+    from .EmailController import email_bp
     
     # Registrar blueprints con prefijo '/api'
     app.register_blueprint(user_bp, url_prefix='/api')
@@ -25,5 +26,6 @@ def register_controllers(app):
     app.register_blueprint(document_type_bp, url_prefix='/api')
     app.register_blueprint(risk_level_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/api')
+    app.register_blueprint(email_bp, url_prefix='/api')
     
     print("✅ Todos los controllers registrados exitosamente")

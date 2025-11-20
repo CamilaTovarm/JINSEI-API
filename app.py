@@ -4,8 +4,13 @@ from flasgger import Swagger
 from flask_migrate import Migrate
 from ConfigDB import init_db, db, ensure_database_exists
 from Controllers import register_controllers
+from flask_mail import Mail
+from dotenv import load_dotenv
 import urllib
 import Models
+import os
+
+mail = Mail()
 
 def create_app():
     app = Flask(__name__)
@@ -29,10 +34,32 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = f"mssql+pyodbc:///?odbc_connect={params}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+
+    # ============================================================
+    # CONFIGURACIÓN DE CORREO ELECTRÓNICO (TEST LOCAL)
+    # ============================================================
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USE_SSL'] = False
+
+    # 👉 Coloca directamente tu correo y contraseña de aplicación
+    app.config['MAIL_USERNAME'] = "notificaciones.jinsei@gmail.com"
+    app.config['MAIL_PASSWORD'] = "cxlo gepz qrla lfph"
+
+    app.config['MAIL_DEFAULT_SENDER'] = "notificaciones.jinsei@gmail.com"
+
+    # Email donde se enviarán las alertas
+    app.config['ALERT_EMAIL_RECIPIENT'] = "mctovar@ucundinamarca.edu.co"
+    # ============================================================
+
+
+
     CORS(app)
     init_db(app)
     Migrate(app, db)
     Swagger(app)
+    mail.init_app(app)  # Inicializar Flask-Mail
 
     register_controllers(app)
     
