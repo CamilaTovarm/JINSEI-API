@@ -8,7 +8,7 @@ class ConsentContactRepository:
         self.db = db
 
     def add_contact_to_consent(self, consent_id, contact_id):
-        """Asocia un contacto existente a un consentimiento"""
+
         try:
             # Verificar si ya existe la relación
             existing = ConsentContact.query.filter_by(
@@ -17,7 +17,7 @@ class ConsentContactRepository:
             ).first()
             
             if existing:
-                return existing  # Ya existe, no duplicar
+                return existing  
             
             link = ConsentContact(ConsentId=consent_id, ContactId=contact_id)
             self.db.session.add(link)
@@ -28,7 +28,7 @@ class ConsentContactRepository:
             raise e
 
     def get_contacts_by_consent(self, consent_id):
-        """Obtiene todos los contactos vinculados a un consentimiento (solo activos)"""
+
         return (
             self.db.session.query(Contact)
             .join(ConsentContact, Contact.ContactId == ConsentContact.ContactId)
@@ -38,7 +38,7 @@ class ConsentContactRepository:
         )
     
     def get_consents_by_contact(self, contact_id):
-        """Obtiene todos los consentimientos vinculados a un contacto"""
+
         from Models.Consent import Consent
         return (
             self.db.session.query(Consent)
@@ -49,7 +49,7 @@ class ConsentContactRepository:
         )
     
     def remove_contact_from_consent(self, consent_id, contact_id):
-        """Elimina la relación entre un consentimiento y un contacto"""
+
         try:
             link = ConsentContact.query.filter_by(
                 ConsentId=consent_id, 

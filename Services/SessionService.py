@@ -13,14 +13,14 @@ class SessionService:
         self._risk_level_repository = RiskLevelRepository()
 
     def get_all_sessions(self, include_deleted=False):
-        """Obtiene todas las sesiones"""
+        
         try:
             return self._session_repository.get_all(include_deleted=include_deleted)
         except SQLAlchemyError as e:
             raise Exception(f"Error al obtener sesiones: {str(e)}")
 
     def get_session_by_id(self, session_id, include_deleted=False):
-        """Obtiene una sesión por ID"""
+
         try:
             session = self._session_repository.get_by_id(session_id, include_deleted=include_deleted)
             if not session:
@@ -30,10 +30,9 @@ class SessionService:
             raise Exception(f"Error al obtener sesión: {str(e)}")
     
     def get_sessions_by_user(self, user_id, include_deleted=False):
-        """Obtiene todas las sesiones de un usuario"""
+
         try:
-            # Validar que el usuario existe
-            user = self._user_repository.get_by_id(user_id)
+            user = self._user_repository.get_by_id(user_id) # Validar que el usuario existe
             if not user:
                 raise Exception(f"El usuario con ID {user_id} no existe.")
             
@@ -42,61 +41,42 @@ class SessionService:
             raise Exception(f"Error al obtener sesiones del usuario: {str(e)}")
     
     def get_active_session(self, user_id):
-        """Obtiene la sesión activa de un usuario (sin EndTime)"""
+
         try:
             return self._session_repository.get_active_session(user_id)
         except SQLAlchemyError as e:
             raise Exception(f"Error al obtener sesión activa: {str(e)}")
 
     def _calculate_risk_level_id(self, average_percent):
-        """
-        Determina el RiskLevelId basado en el promedio de porcentaje.
-        
-        Rangos sugeridos (ajusta según tus necesidades):
-        - Bajo: 0-33%
-        - Medio: 34-66%
-        - Alto: 67-100%
-        
-        Retorna el ID correspondiente de la tabla RiskLevels
-        """
+        # Retorna el ID correspondiente de la tabla RiskLevels
         try:
-            # Obtener todos los niveles de riesgo
+
             risk_levels = self._risk_level_repository.get_all()
             
             if not risk_levels:
                 return None
-            
-            # Asumiendo que los IDs son: 1=Bajo, 2=Medio, 3=Alto
-            # Ajusta estos valores según tu tabla RiskLevels
+
             if average_percent <= 33:
-                # Buscar "Bajo" en la descripción
-                for level in risk_levels:
+                for level in risk_levels: # Buscar "Bajo" en la descripción
                     if level.description and 'bajo' in level.description.lower():
                         return level.RiskLevelId
-                return 1  # Fallback al ID 1
+                return 1 
             elif average_percent <= 66:
-                # Buscar "Medio" en la descripción
-                for level in risk_levels:
+                for level in risk_levels: # Buscar "Medio" en la descripción
                     if level.description and 'medio' in level.description.lower():
                         return level.RiskLevelId
-                return 2  # Fallback al ID 2
+                return 2 
             else:
-                # Buscar "Alto" en la descripción
-                for level in risk_levels:
+                for level in risk_levels: # Buscar "Alto" en la descripción
                     if level.description and 'alto' in level.description.lower():
                         return level.RiskLevelId
-                return 3  # Fallback al ID 3
+                return 3  
         except Exception as e:
             print(f"Error al calcular RiskLevelId: {str(e)}")
             return None
 
     def _calculate_average_risk(self, session_id):
-        """
-        Calcula el promedio de RiskPercent de todos los mensajes de una sesión.
-        
-        Returns:
-            float: Promedio de los porcentajes de riesgo, o 0 si no hay mensajes
-        """
+        # Calcula el promedio de RiskPercent de todos los mensajes de una sesión.
         try:
             # Obtener todos los mensajes de la sesión
             messages = self._message_repository.get_by_session_id(session_id, include_deleted=False)
@@ -119,10 +99,7 @@ class SessionService:
             return 0.0
 
     def create_session(self, user_id):
-        """
-        Crea una nueva sesión (sin solicitar risk_level_id ni final_risk_level).
-        Estos campos se calcularán automáticamente al finalizar la sesión.
-        """
+
         try:
             # Validar que el usuario existe
             user = self._user_repository.get_by_id(user_id)
@@ -146,11 +123,7 @@ class SessionService:
             raise Exception(f"Error al crear sesión: {str(e)}")
 
     def update_session(self, session_id, user_id=None):
-        """
-        Actualiza una sesión existente.
-        Solo permite actualizar el user_id.
-        Los campos de riesgo se calculan automáticamente al finalizar.
-        """
+
         try:
             # Validar que la sesión existe
             session = self._session_repository.get_by_id(session_id)
@@ -173,11 +146,7 @@ class SessionService:
             raise Exception(f"Error al actualizar sesión: {str(e)}")
     
     def end_session(self, session_id):
-        """
-        Finaliza una sesión calculando automáticamente:
-        1. El promedio de RiskPercent de todos los mensajes (FinalRiskLevel)
-        2. El RiskLevelId correspondiente según el promedio
-        """
+
         try:
             session = self._session_repository.get_by_id(session_id)
             if not session:
@@ -192,10 +161,10 @@ class SessionService:
             # Determinar el RiskLevelId basado en el promedio
             risk_level_id = self._calculate_risk_level_id(average_risk)
             
-            # Actualizar la sesión con EndTime, FinalRiskLevel (promedio) y RiskLevelId
+            # Actualizar la sesión con EndTime, FinalRiskLevel y RiskLevelId
             update_data = {
                 'EndTime': datetime.utcnow(),
-                'FinalRiskLevel': average_risk,  # Guardamos el promedio numérico
+                'FinalRiskLevel': average_risk,  
                 'RiskLevelId': risk_level_id
             }
             
@@ -205,7 +174,7 @@ class SessionService:
             raise Exception(f"Error al finalizar sesión: {str(e)}")
 
     def delete_session(self, session_id):
-        """Marca una sesión como eliminada (soft delete)"""
+
         try:
             session = self._session_repository.get_by_id(session_id)
             if not session:
@@ -216,7 +185,7 @@ class SessionService:
             raise Exception(f"Error al eliminar sesión: {str(e)}")
     
     def restore_session(self, session_id):
-        """Restaura una sesión marcada como eliminada"""
+
         try:
             session = self._session_repository.get_by_id(session_id, include_deleted=True)
             if not session:
@@ -232,16 +201,7 @@ class SessionService:
 
 
     def get_session_messages_history(self, session_id, include_deleted=False):
-        """
-        Obtiene el historial completo de mensajes de una sesión específica.
-        
-        Args:
-            session_id: ID de la sesión
-            include_deleted: Si incluir mensajes eliminados
-            
-        Returns:
-            dict: Información de la sesión con su historial de mensajes
-        """
+
         try:
             # Validar que la sesión existe
             session = self._session_repository.get_by_id(session_id, include_deleted=include_deleted)
@@ -261,16 +221,7 @@ class SessionService:
             raise Exception(f"Error al obtener historial de mensajes: {str(e)}")
     
     def get_user_complete_history(self, user_id, include_deleted=False):
-        """
-        Obtiene el historial completo de todas las sesiones y mensajes de un usuario.
-        
-        Args:
-            user_id: ID del usuario
-            include_deleted: Si incluir sesiones y mensajes eliminados
-            
-        Returns:
-            dict: Información del usuario con todas sus sesiones y mensajes
-        """
+
         try:
             # Validar que el usuario existe
             user = self._user_repository.get_by_id(user_id, include_deleted=include_deleted)

@@ -24,7 +24,7 @@ contact_service = ContactService()
     }
 })
 def get_all_contacts():
-    """Obtiene todos los contactos"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         contacts = contact_service.get_all_contacts(include_deleted=include_deleted)
@@ -75,7 +75,7 @@ def get_all_contacts():
     }
 })
 def get_contact_by_id(contact_id):
-    """Obtiene un contacto por ID"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         contact = contact_service.get_contact_by_id(contact_id, include_deleted=include_deleted)
@@ -125,7 +125,7 @@ def get_contact_by_id(contact_id):
     }
 })
 def get_contacts_by_type(contact_type_id):
-    """Obtiene todos los contactos de un tipo específico"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         contacts = contact_service.get_contacts_by_type(contact_type_id, include_deleted=include_deleted)
@@ -185,7 +185,7 @@ def get_contacts_by_type(contact_type_id):
     }
 })
 def create_contact():
-    """Crea un nuevo contacto"""
+
     try:
         data = request.get_json()
         
@@ -255,7 +255,7 @@ def create_contact():
     }
 })
 def update_contact(contact_id):
-    """Actualiza un contacto"""
+
     try:
         data = request.get_json()
         
@@ -310,7 +310,7 @@ def update_contact(contact_id):
     }
 })
 def delete_contact(contact_id):
-    """Elimina un contacto (soft delete)"""
+
     try:
         contact_service.delete_contact(contact_id)
         
@@ -345,7 +345,7 @@ def delete_contact(contact_id):
     }
 })
 def restore_contact(contact_id):
-    """Restaura un contacto eliminado"""
+
     try:
         restored_contact = contact_service.restore_contact(contact_id)
         

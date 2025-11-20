@@ -26,7 +26,7 @@ session_service = SessionService()
     }
 })
 def get_all_sessions():
-    """Obtiene todas las sesiones"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         sessions = session_service.get_all_sessions(include_deleted=include_deleted)
@@ -79,7 +79,7 @@ def get_all_sessions():
     }
 })
 def get_session_by_id(session_id):
-    """Obtiene una sesión por ID"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         session = session_service.get_session_by_id(session_id, include_deleted=include_deleted)
@@ -130,7 +130,7 @@ def get_session_by_id(session_id):
     }
 })
 def get_sessions_by_user(user_id):
-    """Obtiene todas las sesiones de un usuario"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         sessions = session_service.get_sessions_by_user(user_id, include_deleted=include_deleted)
@@ -178,7 +178,7 @@ def get_sessions_by_user(user_id):
     }
 })
 def get_active_session(user_id):
-    """Obtiene la sesión activa de un usuario"""
+
     try:
         session = session_service.get_active_session(user_id)
         
@@ -253,7 +253,7 @@ def get_active_session(user_id):
     }
 })
 def create_session():
-    """Crea una nueva sesión"""
+
     try:
         data = request.get_json()
         
@@ -337,7 +337,7 @@ def create_session():
     }
 })
 def end_session(session_id):
-    """Finaliza una sesión calculando automáticamente el riesgo promedio"""
+
     try:
         session = session_service.end_session(session_id)
         
@@ -399,7 +399,7 @@ def end_session(session_id):
     }
 })
 def update_session(session_id):
-    """Actualiza una sesión"""
+
     try:
         data = request.get_json()
         
@@ -451,7 +451,7 @@ def update_session(session_id):
     }
 })
 def delete_session(session_id):
-    """Elimina una sesión (soft delete)"""
+
     try:
         session_service.delete_session(session_id)
         
@@ -486,7 +486,7 @@ def delete_session(session_id):
     }
 })
 def restore_session(session_id):
-    """Restaura una sesión eliminada"""
+
     try:
         restored_session = session_service.restore_session(session_id)
         
@@ -574,7 +574,7 @@ def restore_session(session_id):
     }
 })
 def get_session_history(session_id):
-    """Obtiene el historial completo de mensajes de una sesión"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         history = session_service.get_session_messages_history(session_id, include_deleted=include_deleted)
@@ -684,7 +684,7 @@ def get_session_history(session_id):
     }
 })
 def get_user_history(user_id):
-    """Obtiene el historial completo de sesiones y mensajes de un usuario"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         history = session_service.get_user_complete_history(user_id, include_deleted=include_deleted)

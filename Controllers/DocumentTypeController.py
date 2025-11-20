@@ -24,7 +24,7 @@ document_type_service = DocumentTypeService()
     }
 })
 def get_all_document_types():
-    """Obtiene todos los tipos de documento"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         document_types = document_type_service.get_all_document_types(include_deleted=include_deleted)
@@ -73,7 +73,7 @@ def get_all_document_types():
     }
 })
 def get_document_type_by_id(document_type_id):
-    """Obtiene un tipo de documento por ID"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         document_type = document_type_service.get_document_type_by_id(document_type_id, include_deleted=include_deleted)
@@ -123,7 +123,7 @@ def get_document_type_by_id(document_type_id):
     }
 })
 def create_document_type():
-    """Crea un nuevo tipo de documento"""
+
     try:
         data = request.get_json()
         
@@ -189,7 +189,7 @@ def create_document_type():
     }
 })
 def update_document_type(document_type_id):
-    """Actualiza un tipo de documento"""
+
     try:
         data = request.get_json()
         
@@ -244,7 +244,7 @@ def update_document_type(document_type_id):
     }
 })
 def delete_document_type(document_type_id):
-    """Elimina un tipo de documento (soft delete)"""
+
     try:
         document_type_service.delete_document_type(document_type_id)
         
@@ -280,7 +280,7 @@ def delete_document_type(document_type_id):
     })
 
 def restore_document_type(document_type_id):
-    """Restaura un tipo de documento eliminado"""
+
     try:
         restored_document_type = document_type_service.restore_document_type(document_type_id)
         return jsonify({

@@ -45,7 +45,7 @@ user_service = UserService()
     }
 })
 def get_all_users():
-    """Obtiene todos los usuarios"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         users = user_service.get_all_users(include_deleted=include_deleted)
@@ -115,7 +115,7 @@ def get_all_users():
     }
 })
 def get_user_by_id(user_id):
-    """Obtiene un usuario por ID"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         user = user_service.get_user_by_id(user_id, include_deleted=include_deleted)
@@ -187,11 +187,10 @@ def get_user_by_id(user_id):
     }
 })
 def create_user():
-    """Crea un nuevo usuario"""
+
     try:
         data = request.get_json()
-        
-        # Validar campos requeridos
+    
         if not data:
             return jsonify({
                 'success': False,
@@ -206,8 +205,7 @@ def create_user():
                 'success': False,
                 'error': 'Los campos "aka" y "password" son requeridos'
             }), 400
-        
-        # Crear usuario
+         
         new_user = user_service.create_user(aka, password)
         
         return jsonify({
@@ -267,7 +265,7 @@ def create_user():
     }
 })
 def update_user(user_id):
-    """Actualiza un usuario existente"""
+
     try:
         data = request.get_json()
         
@@ -279,8 +277,7 @@ def update_user(user_id):
         
         aka = data.get('aka')
         password = data.get('password')
-        
-        # Actualizar usuario
+         
         updated_user = user_service.update_user(user_id, aka=aka, password=password)
         
         return jsonify({
@@ -321,7 +318,7 @@ def update_user(user_id):
     }
 })
 def delete_user(user_id):
-    """Elimina un usuario (soft delete)"""
+
     try:
         user_service.delete_user(user_id)
         
@@ -357,7 +354,7 @@ def delete_user(user_id):
     }
 })
 def restore_user(user_id):
-    """Restaura un usuario eliminado"""
+
     try:
         restored_user = user_service.restore_user(user_id)
         

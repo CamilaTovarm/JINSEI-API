@@ -8,26 +8,26 @@ class SessionRepository:
         self.db = db
 
     def get_all(self, include_deleted=False):
-        """Obtiene todas las sesiones"""
+
         if include_deleted:
             return ChatSession.query.all()
         return ChatSession.query.filter_by(IsDeleted=False).all()
 
     def get_by_id(self, session_id, include_deleted=False):
-        """Obtiene una sesión por ID"""
+
         if include_deleted:
             return ChatSession.query.filter_by(SessionId=session_id).first()
         return ChatSession.query.filter_by(SessionId=session_id, IsDeleted=False).first()
     
     def get_by_user_id(self, user_id, include_deleted=False):
-        """Obtiene todas las sesiones de un usuario"""
+
         query = ChatSession.query.filter_by(UserId=user_id)
         if not include_deleted:
             query = query.filter_by(IsDeleted=False)
         return query.order_by(ChatSession.StartTime.desc()).all()
     
     def get_active_session(self, user_id):
-        """Obtiene la sesión activa (sin EndTime) de un usuario"""
+
         return ChatSession.query.filter_by(
             UserId=user_id,
             EndTime=None,
@@ -35,7 +35,7 @@ class SessionRepository:
         ).first()
 
     def create(self, user_id, start_time=None, end_time=None, risk_level_id=None, final_risk_level=None):
-        """Crea una nueva sesión"""
+
         try:
             new_chat_session = ChatSession(
                 UserId=user_id,
@@ -53,13 +53,12 @@ class SessionRepository:
             raise e
 
     def update(self, session_id, **kwargs):
-        """Actualiza una sesión existente"""
+
         try:
             existing = ChatSession.query.get(session_id)
             if not existing or existing.IsDeleted:
                 return None
-
-            # Actualiza solo los campos proporcionados
+             
             for key, value in kwargs.items():
                 if hasattr(existing, key):
                     setattr(existing, key, value)
@@ -71,7 +70,7 @@ class SessionRepository:
             raise e
     
     def end_session(self, session_id, final_risk_level=None):
-        """Finaliza una sesión estableciendo el EndTime"""
+
         try:
             session = ChatSession.query.get(session_id)
             if not session or session.IsDeleted:
@@ -88,7 +87,7 @@ class SessionRepository:
             raise e
 
     def delete(self, session_id):
-        """Marca una sesión como eliminada (soft delete)"""
+
         try:
             chat_session = ChatSession.query.get(session_id)
             if not chat_session:
@@ -102,7 +101,7 @@ class SessionRepository:
             raise e
     
     def restore(self, session_id):
-        """Restaura una sesión marcada como eliminada"""
+
         try:
             chat_session = ChatSession.query.get(session_id)
             if not chat_session:

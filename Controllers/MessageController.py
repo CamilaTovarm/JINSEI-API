@@ -25,7 +25,7 @@ message_service = MessageService()
     }
 })
 def get_all_messages():
-    """Obtiene todos los mensajes"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         messages = message_service.get_all_messages(include_deleted=include_deleted)
@@ -79,7 +79,7 @@ def get_all_messages():
     }
 })
 def get_message_by_id(message_id):
-    """Obtiene un mensaje por ID"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         message = message_service.get_message_by_id(message_id, include_deleted=include_deleted)
@@ -132,7 +132,7 @@ def get_message_by_id(message_id):
     }
 })
 def get_messages_by_session(session_id):
-    """Obtiene todos los mensajes de una sesión"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         messages = message_service.get_messages_by_session(session_id, include_deleted=include_deleted)
@@ -190,7 +190,7 @@ def get_messages_by_session(session_id):
     }
 })
 def create_message():
-    """Crea un nuevo mensaje"""
+
     try:
         data = request.get_json()
         
@@ -274,7 +274,7 @@ def create_message():
     }
 })
 def update_message(message_id):
-    """Actualiza un mensaje"""
+
     try:
         data = request.get_json()
         
@@ -330,7 +330,7 @@ def update_message(message_id):
     }
 })
 def delete_message(message_id):
-    """Elimina un mensaje (soft delete)"""
+
     try:
         message_service.delete_message(message_id)
         
@@ -365,7 +365,7 @@ def delete_message(message_id):
     }
 })
 def restore_message(message_id):
-    """Restaura un mensaje eliminado"""
+
     try:
         restored_message = message_service.restore_message(message_id)
         

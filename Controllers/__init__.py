@@ -1,10 +1,5 @@
 def register_controllers(app):
-    """
-    Registra todos los blueprints (controllers) en la aplicación Flask.
-    
-    Args:
-        app: Instancia de la aplicación Flask
-    """
+
     from .UserController import user_bp
     from .SessionController import session_bp
     from .MessageController import message_bp
@@ -28,4 +23,4 @@ def register_controllers(app):
     app.register_blueprint(auth_bp, url_prefix='/api')
     app.register_blueprint(email_bp, url_prefix='/api')
     
-    print("✅ Todos los controllers registrados exitosamente")
+    print("Todos los controllers registrados exitosamente")

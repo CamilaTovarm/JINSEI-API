@@ -9,7 +9,6 @@ class Contact(db.Model):
     Description = db.Column(db.String(120), nullable=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
     IsDeleted = db.Column(db.Boolean, default=False)
-
-    # Relaciones bidireccionales
+ 
     contact_type = db.relationship("ContactType", back_populates="contacts")
     consents = db.relationship("Consent", secondary="ConsentContacts", back_populates="contacts")

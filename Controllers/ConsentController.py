@@ -24,7 +24,7 @@ consent_service = ConsentService()
     }
 })
 def get_all_consents():
-    """Obtiene todos los consentimientos"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         consents = consent_service.get_all_consents(include_deleted=include_deleted)
@@ -77,7 +77,7 @@ def get_all_consents():
     }
 })
 def get_consent_by_id(consent_id):
-    """Obtiene un consentimiento por ID"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         consent = consent_service.get_consent_by_id(consent_id, include_deleted=include_deleted)
@@ -128,7 +128,7 @@ def get_consent_by_id(consent_id):
     }
 })
 def get_consents_by_session(session_id):
-    """Obtiene todos los consentimientos de una sesión"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         consents = consent_service.get_consents_by_session(session_id, include_deleted=include_deleted)
@@ -186,7 +186,7 @@ def get_consents_by_session(session_id):
     }
 })
 def create_consent():
-    """Crea un nuevo consentimiento con sus contactos"""
+
     try:
         data = request.get_json()
         
@@ -268,7 +268,7 @@ def create_consent():
     }
 })
 def update_consent(consent_id):
-    """Actualiza un consentimiento"""
+
     try:
         data = request.get_json()
         
@@ -335,7 +335,7 @@ def update_consent(consent_id):
     }
 })
 def update_consent_contacts(consent_id):
-    """Actualiza los contactos de un consentimiento"""
+
     try:
         data = request.get_json()
         
@@ -395,7 +395,7 @@ def update_consent_contacts(consent_id):
     }
 })
 def delete_consent(consent_id):
-    """Elimina un consentimiento (soft delete)"""
+
     try:
         consent_service.delete_consent(consent_id)
         
@@ -430,7 +430,7 @@ def delete_consent(consent_id):
     }
 })
 def restore_consent(consent_id):
-    """Restaura un consentimiento eliminado"""
+
     try:
         restored_consent = consent_service.restore_consent(consent_id)
         
