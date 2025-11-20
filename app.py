@@ -2,10 +2,9 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from flasgger import Swagger
 from flask_migrate import Migrate
-from ConfigDB import init_db, db, ensure_database_exists
+from ConfigDB import init_db, db
 from Controllers import register_controllers
-from flask_mail import Mail
-from dotenv import load_dotenv
+from flask_mail import Mail 
 import urllib
 import Models
 import os
@@ -15,25 +14,22 @@ mail = Mail()
 def create_app():
     app = Flask(__name__)
 
-    SERVER_NAME = "HPPAVILION"   
-    DATABASE_NAME = "JINSEI"    
-
-    ensure_database_exists(SERVER_NAME, DATABASE_NAME)
-                           
+    # Cadena de conexión directa para Azure SQL Database
     connection_string = (
         "DRIVER={ODBC Driver 17 for SQL Server};"
-        f"SERVER={SERVER_NAME};"
-        f"DATABASE={DATABASE_NAME};"
-        "Trusted_Connection=yes;"
+        "SERVER=tcp:jinsei.database.windows.net,1433;"
+        "DATABASE=JINSEI;"
+        "UID=adminJinsei;"
+        "PWD=Jinsei8988udec;"
         "Encrypt=yes;"
-        "TrustServerCertificate=yes;"
-        "Application Name=FlaskApp;"
+        "TrustServerCertificate=no;"
+        "Trusted_Connection=no;"
+        "Connection Timeout=30;"
     )
+    
     params = urllib.parse.quote_plus(connection_string)
-
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"mssql+pyodbc:///?odbc_connect={params}"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"mssql+pyodbc:///?odbc_connect={params}" 
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False 
 
     # EMAIL 
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -42,33 +38,34 @@ def create_app():
     app.config['MAIL_USE_SSL'] = False
  
     app.config['MAIL_USERNAME'] = "notificaciones.jinsei@gmail.com"
-    app.config['MAIL_PASSWORD'] = "cxlo gepz qrla lfph"
-
-    app.config['MAIL_DEFAULT_SENDER'] = "notificaciones.jinsei@gmail.com"
- 
-    app.config['ALERT_EMAIL_RECIPIENT'] = "mctovar@ucundinamarca.edu.co" 
-
+    app.config['MAIL_PASSWORD'] = "cxlo gepz qrla lfph" 
+    app.config['MAIL_DEFAULT_SENDER'] = "notificaciones.jinsei@gmail.com" 
+    app.config['ALERT_EMAIL_RECIPIENT'] = "mctovar@ucundinamarca.edu.co"  
 
     CORS(app)
     init_db(app)
     Migrate(app, db)
     Swagger(app)
-    mail.init_app(app)  # Inicializar Flask-Mail
+    mail.init_app(app)
 
     register_controllers(app)
     
     @app.route("/")
     def index():
         return jsonify({
-            "message": "✅ API Jinsei conectada correctamente a SQL Server 😎🐾",
+            "message": "✅ API Jinsei conectada correctamente a Azure SQL Server 😎🐾",
             "docs": "/apidocs/"
         })
 
     with app.app_context():
         db.create_all()
+    
     return app
 
 
 if __name__ == "__main__":
     app = create_app()
     app.run(debug=True)
+else:
+    # Para Gunicorn en Azure
+    app = create_app()

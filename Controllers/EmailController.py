@@ -3,7 +3,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from flasgger import swag_from
 from Services.EmailService import EmailService
-from app import mail
+#from app import mail
 
 email_bp = Blueprint('email', __name__)
 
@@ -37,7 +37,7 @@ email_bp = Blueprint('email', __name__)
     }
 })
 def test_email():
-
+    from app import mail
     try:
         data = request.get_json()
         
