@@ -60,7 +60,6 @@ class SessionService:
         Retorna el ID correspondiente de la tabla RiskLevels
         """
         try:
-            # Obtener todos los niveles de riesgo
             risk_levels = self._risk_level_repository.get_all()
             
             if not risk_levels:
