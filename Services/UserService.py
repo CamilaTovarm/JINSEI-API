@@ -10,14 +10,14 @@ class UserService:
         self._message_repository = MessageRepository()
 
     def get_all_users(self, include_deleted=False):
-        """Obtiene todos los usuarios"""
+
         try:
             return self._user_repository.get_all(include_deleted=include_deleted)
         except SQLAlchemyError as e:
             raise Exception(f"Error al obtener usuarios: {str(e)}")
 
     def get_user_by_id(self, user_id, include_deleted=False):
-        """Obtiene un usuario por ID"""
+
         try:
             user = self._user_repository.get_by_id(user_id, include_deleted=include_deleted)
             if not user:
@@ -27,7 +27,7 @@ class UserService:
             raise Exception(f"Error al obtener usuario: {str(e)}")
     
     def get_user_by_aka(self, aka):
-        """Obtiene un usuario por su AKA (útil para login)"""
+
         try:
             user = self._user_repository.get_by_aka(aka)
             if not user:
@@ -38,19 +38,11 @@ class UserService:
     
 
     def encrypt_password(self, password):
-        """
-        Encripta (hashea) una contraseña usando werkzeug.security
-        Equivalente a tu método EncryptPassword de .NET pero más seguro.
-        
-        Usa PBKDF2 con SHA256 por defecto (más seguro que SHA256 solo)
-        """
+
         return generate_password_hash(password, method='pbkdf2:sha256')
 
     def validate_password_strength(self, password):
-        """
-        Valida que la contraseña cumpla con requisitos mínimos.
-        Personaliza según tus necesidades.
-        """
+
         if len(password) < 8:
             raise Exception("La contraseña debe tener al menos 8 caracteres.")
         if not re.search(r'[A-Z]', password):
@@ -63,27 +55,27 @@ class UserService:
             raise Exception("La contraseña debe contener al menos un carácter especial.")
 
     def create_user(self, aka, password):
-        """Crea un nuevo usuario con contraseña encriptada"""
+
         try:
             # 1. Validar que el AKA no exista
             existing_user = self._user_repository.get_by_aka(aka)
             if existing_user:
                 raise Exception(f"El usuario '{aka}' ya existe.")
             
-            # 2. Validar fortaleza de la contraseña
+            # 2. Validar la contraseña
             self.validate_password_strength(password)
             
-            # 3. Encriptar la contraseña ANTES de guardar
+            # 3. Encriptar la contraseña 
             encrypted_password = self.encrypt_password(password)
             
-            # 4. Crear el usuario con la contraseña encriptada
+            # 4. Crear el usuario 
             return self._user_repository.create(aka, encrypted_password)
             
         except SQLAlchemyError as e:
             raise Exception(f"Error al crear usuario: {str(e)}")
 
     def update_user(self, user_id, aka=None, password=None):
-        """Actualiza un usuario existente"""
+
         try:
             # Validar que el usuario existe
             user = self._user_repository.get_by_id(user_id)
@@ -109,7 +101,7 @@ class UserService:
             raise Exception(f"Error al actualizar usuario: {str(e)}")
 
     def delete_user(self, user_id):
-        """Marca un usuario como eliminado (soft delete)"""
+
         try:
             # Validar que el usuario existe
             user = self._user_repository.get_by_id(user_id)
@@ -121,7 +113,7 @@ class UserService:
             raise Exception(f"Error al eliminar usuario: {str(e)}")
     
     def restore_user(self, user_id):
-        """Restaura un usuario marcado como eliminado"""
+
         try:
             user = self._user_repository.get_by_id(user_id, include_deleted=True)
             if not user:

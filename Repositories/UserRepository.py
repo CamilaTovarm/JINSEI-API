@@ -7,23 +7,23 @@ class UserRepository:
         self.db = db
 
     def get_all(self, include_deleted=False):
-        """Obtiene todos los usuarios"""
+
         if include_deleted:
             return User.query.all()
         return User.query.filter_by(IsDeleted=False).all()
 
     def get_by_id(self, user_id, include_deleted=False):
-        """Obtiene un usuario por ID"""
+
         if include_deleted:
             return User.query.filter_by(UserId=user_id).first()
         return User.query.filter_by(UserId=user_id, IsDeleted=False).first()
     
     def get_by_aka(self, aka):
-        """Obtiene un usuario por su AKA (útil para login)"""
+
         return User.query.filter_by(AKA=aka, IsDeleted=False).first()
 
     def create(self, aka, password):
-        """Crea un nuevo usuario"""
+
         try:
             new_user = User(AKA=aka, Password=password, IsDeleted=False)
             self.db.session.add(new_user)
@@ -34,7 +34,7 @@ class UserRepository:
             raise e
 
     def update(self, user_id, aka=None, password=None):
-        """Actualiza un usuario existente"""
+
         try:
             existing = User.query.get(user_id)
             if not existing or existing.IsDeleted:
@@ -52,7 +52,7 @@ class UserRepository:
             raise e
 
     def delete(self, user_id):
-        """Marca un usuario como eliminado (soft delete)"""
+
         try:
             user = User.query.get(user_id)
             if not user:
@@ -66,7 +66,7 @@ class UserRepository:
             raise e
     
     def restore(self, user_id):
-        """Restaura un usuario marcado como eliminado"""
+
         try:
             user = User.query.get(user_id)
             if not user:

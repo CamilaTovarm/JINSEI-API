@@ -7,26 +7,26 @@ class ContactRepository:
         self.db = db
 
     def get_all(self, include_deleted=False):
-        """Obtiene todos los contactos"""
+
         if include_deleted:
             return Contact.query.all()
         return Contact.query.filter_by(IsDeleted=False).all()
 
     def get_by_id(self, contact_id, include_deleted=False):
-        """Obtiene un contacto por ID"""
+
         if include_deleted:
             return Contact.query.filter_by(ContactId=contact_id).first()
         return Contact.query.filter_by(ContactId=contact_id, IsDeleted=False).first()
     
     def get_by_type(self, contact_type_id, include_deleted=False):
-        """Obtiene todos los contactos de un tipo específico"""
+
         query = Contact.query.filter_by(ContactTypeId=contact_type_id)
         if not include_deleted:
             query = query.filter_by(IsDeleted=False)
         return query.all()
 
     def create(self, contact_type_id, description):
-        """Crea un nuevo contacto"""
+
         try:
             new_contact = Contact(
                 ContactTypeId=contact_type_id,
@@ -41,13 +41,12 @@ class ContactRepository:
             raise e
 
     def update(self, contact_id, **kwargs):
-        """Actualiza un contacto existente"""
+
         try:
             existing = Contact.query.get(contact_id)
             if not existing or existing.IsDeleted:
                 return None
-            
-            # Actualiza solo los campos proporcionados
+        
             for key, value in kwargs.items():
                 if hasattr(existing, key):
                     setattr(existing, key, value)
@@ -59,7 +58,7 @@ class ContactRepository:
             raise e
 
     def delete(self, contact_id):
-        """Marca un contacto como eliminado (soft delete)"""
+
         try:
             contact = Contact.query.get(contact_id)
             if not contact:
@@ -73,7 +72,7 @@ class ContactRepository:
             raise e
     
     def restore(self, contact_id):
-        """Restaura un contacto marcado como eliminado"""
+
         try:
             contact = Contact.query.get(contact_id)
             if not contact:

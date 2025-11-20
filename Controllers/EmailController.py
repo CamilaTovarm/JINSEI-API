@@ -37,7 +37,7 @@ email_bp = Blueprint('email', __name__)
     }
 })
 def test_email():
-    """Enviar correo de prueba"""
+
     try:
         data = request.get_json()
         

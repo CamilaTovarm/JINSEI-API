@@ -76,11 +76,7 @@ auth_service = AuthService()
     }
 })
 def login():
-    """
-    Endpoint para iniciar sesión (autenticación).
-    
-    Valida las credenciales del usuario y retorna sus datos si son correctas.
-    """
+
     try:
         # Obtener datos del body
         data = request.get_json()
@@ -93,15 +89,14 @@ def login():
 
         aka = data.get('aka')
         password = data.get('password')
-
-        # Validar que se enviaron los campos requeridos
+ 
         if not aka or not password:
             return jsonify({
                 'success': False,
                 'error': 'Los campos "aka" y "password" son requeridos'
             }), 400
 
-        # Validar formato de credenciales (opcional pero recomendado)
+        # Validar formato de credenciales
         try:
             auth_service.validate_credentials_format(aka, password)
         except Exception as e:
@@ -113,7 +108,7 @@ def login():
         # Autenticar usuario
         user = auth_service.authenticate_user(aka, password)
 
-        # Respuesta exitosa (NO incluir la contraseña hasheada)
+        # login exitoso
         return jsonify({
             'success': True,
             'message': 'Inicio de sesión exitoso',
@@ -179,11 +174,7 @@ def login():
     }
 })
 def validate_username():
-    """
-    Valida si un usuario existe por su AKA.
-    
-    Útil para verificar disponibilidad de username antes de registrar.
-    """
+
     try:
         data = request.get_json()
 
@@ -205,7 +196,7 @@ def validate_username():
         try:
             user = auth_service.get_user_by_aka(aka)
             
-            # Si llega aquí, el usuario existe
+            # el usuario existe
             return jsonify({
                 'success': True,
                 'exists': True,

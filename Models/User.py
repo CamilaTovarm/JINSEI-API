@@ -9,6 +9,5 @@ class User(db.Model):
     Password = db.Column(db.String(255), nullable=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
     IsDeleted = db.Column(db.Boolean, default=False)
-
-    # Relación bidireccional con ChatSession
+ 
     chat_sessions = db.relationship("ChatSession", back_populates="user", cascade="all, delete-orphan")

@@ -6,47 +6,35 @@ from datetime import datetime
 import os
 
 class EmailService:
-    def __init__(self, mail_instance):
-        """
-        Inicializa el servicio de correo.
-        
-        Args:
-            mail_instance: Instancia de Flask-Mail
-        """
+    def __init__(self, mail_instance): 
         self.mail = mail_instance
     
     def send_consent_alert_email(self, consent_data, contact_data):
         
         try:
-            # Obtener el correo destinatario desde la configuración
+
             recipient_email = current_app.config.get('ALERT_EMAIL_RECIPIENT')
             
             if not recipient_email:
                 raise Exception("No se configuró el correo destinatario (ALERT_EMAIL_RECIPIENT)")
-            
-            # Crear el asunto del correo
+        
             subject = f"🚨 ALERTA: Nuevo consentimiento por riesgo de ideación suicida - {consent_data['FullName']}"
-            
-            # Crear el cuerpo del correo en HTML
+        
             html_body = self._create_consent_alert_html(consent_data, contact_data)
-            
-            # Crear mensaje
+        
             msg = Message(
                 subject=subject,
                 recipients=[recipient_email],
                 html=html_body
             )
-            
-            # Enviar correo
+        
             self.mail.send(msg)
             
-            print(f"✅ Correo de alerta enviado exitosamente a: {recipient_email}")
+            print(f"Correo de alerta enviado exitosamente a: {recipient_email}")
             return True
             
         except Exception as e:
-            print(f"❌ Error al enviar correo de alerta: {str(e)}")
-            # No lanzamos la excepción para que no falle la creación del consentimiento
-            # Solo registramos el error
+            print(f"Error al enviar correo de alerta: {str(e)}")
             return False
     
     def _create_consent_alert_html(self, consent_data, contact_data):
@@ -295,9 +283,9 @@ class EmailService:
             )
             
             self.mail.send(msg)
-            print(f"✅ Correo de prueba enviado exitosamente a: {recipient_email}")
+            print(f"Correo de prueba enviado exitosamente a: {recipient_email}")
             return True
             
         except Exception as e:
-            print(f"❌ Error al enviar correo de prueba: {str(e)}")
+            print(f"Error al enviar correo de prueba: {str(e)}")
             return False

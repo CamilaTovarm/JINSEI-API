@@ -7,26 +7,26 @@ class MessageRepository:
         self.db = db
 
     def get_all(self, include_deleted=False):
-        """Obtiene todos los mensajes"""
+
         if include_deleted:
             return Message.query.all()
         return Message.query.filter_by(IsDeleted=False).all()
 
     def get_by_id(self, message_id, include_deleted=False):
-        """Obtiene un mensaje por ID"""
+
         if include_deleted:
             return Message.query.filter_by(MessageId=message_id).first()
         return Message.query.filter_by(MessageId=message_id, IsDeleted=False).first()
     
     def get_by_session_id(self, session_id, include_deleted=False):
-        """Obtiene todos los mensajes de una sesión ordenados por fecha"""
+
         query = Message.query.filter_by(SessionId=session_id)
         if not include_deleted:
             query = query.filter_by(IsDeleted=False)
         return query.order_by(Message.CreatedAt).all()
 
     def create(self, session_id, bot_message, user_response=None, risk_level_id=None, risk_percent=None):
-        """Crea un nuevo mensaje"""
+
         try:
             new_message = Message(
                 SessionId=session_id,
@@ -44,7 +44,7 @@ class MessageRepository:
             raise e
 
     def update(self, message_id, **kwargs):
-        """Actualiza un mensaje existente"""
+
         try:
             existing = Message.query.get(message_id)
             if not existing or existing.IsDeleted:
@@ -62,7 +62,7 @@ class MessageRepository:
             raise e
 
     def delete(self, message_id):
-        """Marca un mensaje como eliminado (soft delete)"""
+
         try:
             message = Message.query.get(message_id)
             if not message:
@@ -76,7 +76,7 @@ class MessageRepository:
             raise e
     
     def restore(self, message_id):
-        """Restaura un mensaje marcado como eliminado"""
+
         try:
             message = Message.query.get(message_id)
             if not message:

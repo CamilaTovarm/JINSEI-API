@@ -9,14 +9,14 @@ class ContactService:
         self._contact_type_repository = ContactTypeRepository()
 
     def get_all_contacts(self, include_deleted=False):
-        """Obtiene todos los contactos"""
+
         try:
             return self._contact_repository.get_all(include_deleted=include_deleted)
         except SQLAlchemyError as e:
             raise Exception(f"Error al obtener contactos: {str(e)}")
 
     def get_contact_by_id(self, contact_id, include_deleted=False):
-        """Obtiene un contacto por ID"""
+
         try:
             contact = self._contact_repository.get_by_id(contact_id, include_deleted=include_deleted)
             if not contact:
@@ -26,13 +26,7 @@ class ContactService:
             raise Exception(f"Error al obtener contacto: {str(e)}")
     
     def get_contacts_by_type(self, contact_type_id, include_deleted=False):
-        """
-        Obtiene todos los contactos de un tipo específico.
-        
-        Ejemplos:
-            - contact_type_id=1 → Todos los emails
-            - contact_type_id=2 → Todos los teléfonos
-        """
+
         try:
             contact_type = self._contact_type_repository.get_by_id(contact_type_id)
             if not contact_type:
@@ -43,13 +37,7 @@ class ContactService:
             raise Exception(f"Error al obtener contactos por tipo: {str(e)}")
 
     def _validate_contact_value(self, contact_type_id, value):
-        """
-        Valida el valor del contacto según su tipo.
-        
-        Args:
-            contact_type_id: 1=Email, 2=Teléfono, etc.
-            value: El valor a validar (email o teléfono)
-        """
+
         EMAIL_TYPE_ID = 1
         PHONE_TYPE_ID = 2
         
@@ -66,18 +54,7 @@ class ContactService:
                 raise Exception(f"El teléfono '{value}' no tiene un formato válido.")
 
     def create_contact(self, contact_type_id, value):
-        """
-        Crea un nuevo contacto.
-        
-        Args:
-            contact_type_id: ID del tipo de contacto (1=Email, 2=Teléfono, etc.)
-            value: El valor del contacto (ej: "usuario@email.com" o "+57 300 123 4567")
-                   Este valor se guarda en la columna Description
-        
-        Ejemplos:
-            create_contact(1, "juan@email.com")  # Crea un email
-            create_contact(2, "+57 300 123 4567")  # Crea un teléfono
-        """
+
         try:
             # Validar que el tipo de contacto existe
             contact_type = self._contact_type_repository.get_by_id(contact_type_id)
@@ -87,20 +64,13 @@ class ContactService:
             # Validar el formato del valor según el tipo
             self._validate_contact_value(contact_type_id, value)
             
-            # Crear el contacto (value se guarda en Description)
+            # Crear el contacto
             return self._contact_repository.create(contact_type_id, value)
         except SQLAlchemyError as e:
             raise Exception(f"Error al crear contacto: {str(e)}")
 
     def update_contact(self, contact_id, contact_type_id=None, value=None):
-        """
-        Actualiza un contacto existente.
-        
-        Args:
-            contact_id: ID del contacto a actualizar
-            contact_type_id: Nuevo tipo de contacto (opcional)
-            value: Nuevo valor (email o teléfono) (opcional)
-        """
+
         try:
             # Validar que el contacto existe
             contact = self._contact_repository.get_by_id(contact_id)
@@ -128,7 +98,7 @@ class ContactService:
             raise Exception(f"Error al actualizar contacto: {str(e)}")
 
     def delete_contact(self, contact_id):
-        """Marca un contacto como eliminado (soft delete)"""
+
         try:
             contact = self._contact_repository.get_by_id(contact_id)
             if not contact:
@@ -139,7 +109,7 @@ class ContactService:
             raise Exception(f"Error al eliminar contacto: {str(e)}")
     
     def restore_contact(self, contact_id):
-        """Restaura un contacto marcado como eliminado"""
+
         try:
             contact = self._contact_repository.get_by_id(contact_id, include_deleted=True)
             if not contact:

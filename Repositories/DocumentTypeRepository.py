@@ -7,19 +7,19 @@ class DocumentTypeRepository:
         self.db = db
 
     def get_all(self, include_deleted=False):
-        """Obtiene todos los tipos de documento"""
+
         if include_deleted:
             return DocumentType.query.all()
         return DocumentType.query.filter_by(IsDeleted=False).all()
 
     def get_by_id(self, document_type_id, include_deleted=False):
-        """Obtiene un tipo de documento por ID"""
+
         if include_deleted:
             return DocumentType.query.filter_by(DocumentTypeId=document_type_id).first()
         return DocumentType.query.filter_by(DocumentTypeId=document_type_id, IsDeleted=False).first()
 
     def create(self, description):
-        """Crea un nuevo tipo de documento"""
+
         try:
             new_document_type = DocumentType(Description=description, IsDeleted=False)
             self.db.session.add(new_document_type)
@@ -30,7 +30,7 @@ class DocumentTypeRepository:
             raise e
 
     def update(self, document_type_id, description):
-        """Actualiza un tipo de documento existente"""
+
         try:
             existing = DocumentType.query.get(document_type_id)
             if not existing or existing.IsDeleted:
@@ -44,7 +44,7 @@ class DocumentTypeRepository:
             raise e
 
     def delete(self, document_type_id):
-        """Marca un tipo de documento como eliminado (soft delete)"""
+
         try:
             document_type = DocumentType.query.get(document_type_id)
             if not document_type:
@@ -58,7 +58,7 @@ class DocumentTypeRepository:
             raise e
     
     def restore(self, document_type_id):
-        """Restaura un tipo de documento marcado como eliminado"""
+
         try:
             document_type = DocumentType.query.get(document_type_id)
             if not document_type:

@@ -24,7 +24,7 @@ contact_type_service = ContactTypeService()
     }
 })
 def get_all_contact_types():
-    """Obtiene todos los tipos de contacto"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         contact_types = contact_type_service.get_all_contact_types(include_deleted=include_deleted)
@@ -73,7 +73,7 @@ def get_all_contact_types():
     }
 })
 def get_contact_type_by_id(contact_type_id):
-    """Obtiene un tipo de contacto por ID"""
+
     try:
         include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
         contact_type = contact_type_service.get_contact_type_by_id(contact_type_id, include_deleted=include_deleted)
@@ -123,7 +123,7 @@ def get_contact_type_by_id(contact_type_id):
     }
 })
 def create_contact_type():
-    """Crea un nuevo tipo de contacto"""
+
     try:
         data = request.get_json()
         
@@ -189,7 +189,7 @@ def create_contact_type():
     }
 })
 def update_contact_type(contact_type_id):
-    """Actualiza un tipo de contacto"""
+
     try:
         data = request.get_json()
         
@@ -244,7 +244,7 @@ def update_contact_type(contact_type_id):
     }
 })
 def delete_contact_type(contact_type_id):
-    """Elimina un tipo de contacto (soft delete)"""
+
     try:
         contact_type_service.delete_contact_type(contact_type_id)
         
@@ -279,7 +279,7 @@ def delete_contact_type(contact_type_id):
     }
 })
 def restore_contact_type(contact_type_id):
-    """Restaura un tipo de contacto eliminado"""
+
     try:
         restored_contact_type = contact_type_service.restore_contact_type(contact_type_id)
         
