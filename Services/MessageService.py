@@ -52,19 +52,19 @@ class MessageService:
             if risk_percent <= 20:
                 # Buscar "Bajo" en la descripción
                 for level in risk_levels:
-                    if level.description and 'bajo' in level.description.lower():
+                    if level.description and 'Sin Riesgo' in level.description.lower():
                         return level.RiskLevelId
                 return 1  # Fallback por defecto
             elif risk_percent <= 66:
                 # Buscar "Medio" en la descripción
                 for level in risk_levels:
-                    if level.description and 'medio' in level.description.lower():
+                    if level.description and 'Riesgo Bajo' in level.description.lower():
                         return level.RiskLevelId
                 return 2  # Fallback por defecto
             else:
                 # Buscar "Alto" en la descripción
                 for level in risk_levels:
-                    if level.description and 'alto' in level.description.lower():
+                    if level.description and 'Riesgo Alto' in level.description.lower():
                         return level.RiskLevelId
                 return 3  # Fallback por defecto
         except Exception as e:

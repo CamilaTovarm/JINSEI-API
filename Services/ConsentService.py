@@ -81,8 +81,8 @@ class ConsentService:
             
             #Verificar que los ContactTypeId existen
             #ContactTypeId = 1 (Email), ContactTypeId = 2 (Teléfono)
-            EMAIL_TYPE_ID = 1
-            PHONE_TYPE_ID = 2
+            EMAIL_TYPE_ID = 3
+            PHONE_TYPE_ID = 4
             
             email_type = self._contact_type_repository.get_by_id(EMAIL_TYPE_ID)
             if not email_type:

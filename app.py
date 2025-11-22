@@ -16,14 +16,13 @@ def create_app():
 
     # Cadena de conexión directa para Azure SQL Database
     connection_string = (
-        "DRIVER={ODBC Driver 17 for SQL Server};"
+        "DRIVER={ODBC Driver 18 for SQL Server};"
         "SERVER=tcp:jinsei.database.windows.net,1433;"
         "DATABASE=JINSEI;"
         "UID=adminJinsei;"
         "PWD=Jinsei8988udec;"
         "Encrypt=yes;"
         "TrustServerCertificate=no;"
-        "Trusted_Connection=no;"
         "Connection Timeout=30;"
     )
     
@@ -58,14 +57,17 @@ def create_app():
         })
 
     with app.app_context():
-        db.create_all()
-    
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f"Error al crear tablas: {str(e)}")
     return app
 
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True)
+    port = int(os.getenv("PORT", 8000))
+    app.run(host="0.0.0.0", port=port, debug=False)
 else:
     # Para Gunicorn en Azure
     app = create_app()
