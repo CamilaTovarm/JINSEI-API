@@ -58,8 +58,22 @@ def create_app():
         })
 
  
+# Crear la instancia de app a nivel de módulo
+try:
+    app = create_app()
+    print("✅ App creada exitosamente")
+except Exception as e:
+    print(f"❌ Error al crear app: {str(e)}")
+    import traceback
+    traceback.print_exc()
+    # Crear app mínima para que Gunicorn no falle completamente
+    app = Flask(__name__)
+    
+    @app.route("/")
+    def error():
+        return jsonify({"error": "App failed to initialize", "details": str(e)}), 500
 
-app = create_app()
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=False)    
