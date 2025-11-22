@@ -16,7 +16,7 @@ def create_app():
 
     # Cadena de conexión directa para Azure SQL Database
     connection_string = (
-        "DRIVER={ODBC Driver 18 for SQL Server};"
+        "DRIVER={ODBC Driver 17 for SQL Server};"
         "SERVER=tcp:jinsei.database.windows.net,1433;"
         "DATABASE=JINSEI;"
         "UID=adminJinsei;"
@@ -53,15 +53,11 @@ def create_app():
     def index():
         return jsonify({
             "message": "✅ API Jinsei conectada correctamente a Azure SQL Server 😎🐾",
-            "docs": "/apidocs/"
+            "docs": "/apidocs/", 
+            "status": "running"
         })
 
-    with app.app_context():
-        try:
-            db.create_all()
-        except Exception as e:
-            print(f"Error al crear tablas: {str(e)}")
-    return app
+ 
 
 
 if __name__ == "__main__":
